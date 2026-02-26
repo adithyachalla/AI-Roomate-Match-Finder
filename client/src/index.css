@@ -56,3 +56,44 @@ input[type="range"]::-moz-range-thumb {
   border: 2px solid #ffffff;
   cursor: pointer;
 }
+
+
+/* ================= OwnerDashboard Layout Fix ================= */
+
+.dark {
+  background-color: #0b0f1a;
+  color: white;
+}
+
+.bg-background-dark {
+  background-color: #0b0f1a;
+}
+
+.bg-navy-dark {
+  background-color: #050a14;
+}
+
+.bg-slate-900\/50 {
+  background-color: rgba(15, 23, 42, 0.5);
+}
+
+.bg-slate-800\/50 {
+  background-color: rgba(30, 41, 59, 0.5);
+}
+
+.bg-slate-800\/30 {
+  background-color: rgba(30, 41, 59, 0.3);
+}
+
+/* Force Leaflet below everything */
+.leaflet-container {
+  z-index: 0 !important;
+}
+
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control,
+.leaflet-popup-pane {
+  z-index: 0 !important;
+}
