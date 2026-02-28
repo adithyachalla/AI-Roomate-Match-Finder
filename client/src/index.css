@@ -97,3 +97,25 @@ input[type="range"]::-moz-range-thumb {
 .leaflet-popup-pane {
   z-index: 0 !important;
 }
+
+
+/* Leaflet Dark Mode Popups */
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: #1c2127 !important;
+  color: #fff !important;
+  border: 1px solid #283039;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.leaflet-popup-content {
+  margin: 12px !important;
+  min-width: 160px;
+}
+
+.leaflet-container {
+  background: #0c1219 !important;
+}
+
+.leaflet-tile-pane {
+  filter: brightness(1.1) contrast(1.1);
+}

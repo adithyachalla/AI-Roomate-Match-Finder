@@ -19,17 +19,17 @@ const Header = ({ activeTab, setActiveTab }) => {
   return (
     <header className="flex items-center justify-between border-b border-solid border-slate-800 px-4 md:px-6 py-3 bg-background-dark z-[10000] sticky top-0">
       <div className="flex items-center gap-3 md:gap-4">
-        <div className="size-8 text-primary">
-          <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-            <g clipPath="url(#clip0_6_319)">
-              <path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z" fill="currentColor"></path>
-            </g>
-            <defs>
-              <clipPath id="clip0_6_319"><rect fill="white" height="48" width="48"></rect></clipPath>
-            </defs>
-          </svg>
+        <div className="flex items-center gap-3">
+          {/* RoomSync Diamond Logo */}
+          <div className="relative w-8 h-8 md:w-9 md:h-9">
+            <div className="absolute inset-0 border-[3px] border-white/20 rounded-md rotate-45 -translate-x-1 -translate-y-1"></div>
+            <div className="absolute inset-0 border-[3px] border-accent-teal rounded-md rotate-45 translate-x-1 translate-y-1"></div>
+          </div>
+
+          <h2 className="text-white text-lg md:text-xl font-black tracking-tight">
+            Room<span className="text-accent-teal">Sync</span>
+          </h2>
         </div>
-        <h2 className="text-lg md:text-xl font-bold leading-tight tracking-tight">RoomSync</h2>
       </div>
 
       <div className="flex flex-1 justify-end gap-4 md:gap-8 items-center">

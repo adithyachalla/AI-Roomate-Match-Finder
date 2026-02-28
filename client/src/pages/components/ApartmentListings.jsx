@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Search, ChevronDown, Sparkles, Plus as PlusIcon, Minus as MinusIcon, Navigation, MapPin } from "lucide-react";
+import { motion } from "framer-motion";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import ApartmentCard from "./ApartmentCard";
@@ -260,17 +261,17 @@ const ApartmentListings = ({ onViewDetail }) => {
           ${showMapOnMobile ? 'flex' : 'hidden md:flex'}
           relative z-0 flex-1
         `}>
-          <MapContainer 
-            className="relative z-0"
-            center={[40.8075, -73.9626]}
-            zoom={13}
-            scrollWheelZoom={true}
-            style={{ height: "100%", width: "100%" }}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
+            <MapContainer 
+              className="relative z-0"
+              center={[34.0224, -118.2851]}
+              zoom={14}
+              scrollWheelZoom={true}
+              style={{ height: "100%", width: "100%" }}
+            >
+              <TileLayer
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              />
             {filteredApartments.map((apt) => {
               const lat = parseFloat(apt.lat);
               const lng = parseFloat(apt.lng);
@@ -285,10 +286,10 @@ const ApartmentListings = ({ onViewDetail }) => {
                   position={[lat, lng]}
                 >
                   <Popup>
-                    <div className="text-black p-1">
+                    <div className="text-white p-1">
                       <img src={apt.image_url} className="w-full h-20 object-cover rounded mb-2" alt="" />
                       <strong className="block text-sm">{apt.title}</strong>
-                      <span className="text-xs text-slate-600">${apt.price.toLocaleString()}/mo</span>
+                      <span className="text-xs text-slate-400">${apt.price.toLocaleString()}/mo</span>
                       <button 
                         onClick={() => onViewDetail(apt.id)}
                         className="mt-2 w-full bg-primary text-white text-[10px] py-1 rounded font-bold"

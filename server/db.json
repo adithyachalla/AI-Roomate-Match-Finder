@@ -3,7 +3,7 @@
     {
       "id": 1,
       "title": "Skyview Residences",
-      "address": "Morningside Heights",
+      "address": "University Park, LA",
       "price": 1850,
       "bedrooms": 2,
       "bathrooms": 2,
@@ -23,8 +23,8 @@
       "status": "Active",
       "views": 1240,
       "matches": 8,
-      "lat": 40.809,
-      "lng": -73.962,
+      "lat": 34.0259,
+      "lng": -118.2879,
       "owner": {
         "name": "Alex Johnson",
         "avatar": "https://picsum.photos/seed/lister/100/100"
@@ -33,7 +33,7 @@
     {
       "id": 2,
       "title": "Uptown Lofts",
-      "address": "Harlem",
+      "address": "West Adams, LA",
       "price": 1400,
       "bedrooms": 1,
       "bathrooms": 1,
@@ -51,8 +51,8 @@
       "status": "Pending",
       "views": 850,
       "matches": 3,
-      "lat": 40.8115,
-      "lng": -73.9465,
+      "lat": 34.0194,
+      "lng": -118.2812,
       "owner": {
         "name": "Sarah Miller",
         "avatar": "https://picsum.photos/seed/sarah/100/100"
@@ -61,7 +61,7 @@
     {
       "id": 3,
       "title": "The Bradhurst",
-      "address": "Upper West Side",
+      "address": "Exposition Park, LA",
       "price": 2100,
       "bedrooms": 3,
       "bathrooms": 2,
@@ -80,77 +80,19 @@
       "status": "Active",
       "views": 391,
       "matches": 1,
-      "lat": 40.787,
-      "lng": -73.9754,
+      "lat": 34.0215,
+      "lng": -118.2925,
       "owner": {
         "name": "David Kim",
         "avatar": "https://picsum.photos/seed/david/100/100"
       }
-    },
-    {
-      "id": 1772137696247,
-      "title": "New apt",
-      "address": "2707 Portland Street",
-      "lat": 40.7908,
-      "lng": -73.96845,
-      "price": 3000,
-      "availableFrom": "2026-02-02",
-      "bedrooms": 1,
-      "bathrooms": 1,
-      "amenities": [
-        "Pool",
-        "Parking",
-        "Laundry"
-      ],
-      "image_url": "https://picsum.photos/seed/upload17721376820500/800/600",
-      "images": [
-        "https://picsum.photos/seed/upload17721376820500/800/600",
-        "https://picsum.photos/seed/upload17721376896640/800/600"
-      ],
-      "distance": "0.5 mi to Campus",
-      "owner": {
-        "name": "Alex Johnson",
-        "avatar": "https://picsum.photos/seed/lister/100/100"
-      },
-      "status": "Active",
-      "views": 0,
-      "matches": 0,
-      "is_ai_match": false
-    },
-    {
-      "id": 1772142614678,
-      "title": "Happy apt",
-      "address": "Los Angeles, CA",
-      "lat": 40.8091,
-      "lng": -81.9874,
-      "price": 2000,
-      "availableFrom": "2026-01-01",
-      "bedrooms": 1,
-      "bathrooms": 1,
-      "amenities": [
-        "Parking"
-      ],
-      "image_url": "https://picsum.photos/seed/upload17721425995260/800/600",
-      "images": [
-        "https://picsum.photos/seed/upload17721425995260/800/600",
-        "https://picsum.photos/seed/upload17721426059450/800/600"
-      ],
-      "distance": "0.5 mi to Campus",
-      "owner": {
-        "name": "Alex Johnson",
-        "avatar": "https://picsum.photos/seed/lister/100/100"
-      },
-      "status": "Active",
-      "views": 0,
-      "matches": 0,
-      "is_ai_match": false
     }
   ],
   "roommates": [
     {
       "id": 1,
       "name": "Sarah Miller",
-      "bio": "Graduate student at Columbia. Quiet, focus-oriented, and loves coffee.",
+      "bio": "Graduate student at USC. Quiet, focus-oriented, and loves coffee.",
       "lifestyle": {
         "cleanliness": "High",
         "noise": "Low",
@@ -211,14 +153,6 @@
       "recipient": "Alex Johnson",
       "text": "I'm interested in the 2BR suite.",
       "time": "Monday",
-      "unread": false
-    },
-    {
-      "id": 1772142530939,
-      "sender": "Alex Johnson",
-      "recipient": "Alex Chen",
-      "text": "Sure when are you available for tour",
-      "time": "01:48 PM",
       "unread": false
     }
   ],

@@ -21,7 +21,7 @@ const initDb = () => {
         {
           id: 1,
           title: "Skyview Residences",
-          address: "Morningside Heights",
+          address: "University Park, LA",
           price: 1850,
           bedrooms: 2,
           bathrooms: 2,
@@ -37,8 +37,8 @@ const initDb = () => {
           status: "Active",
           views: 1240,
           matches: 8,
-          lat: 40.8090,
-          lng: -73.9620,
+          lat: 34.0259,
+          lng: -118.2879,
           owner: {
             name: "Alex Johnson",
             avatar: "https://picsum.photos/seed/lister/100/100"
@@ -47,7 +47,7 @@ const initDb = () => {
         {
           id: 2,
           title: "Uptown Lofts",
-          address: "Harlem",
+          address: "West Adams, LA",
           price: 1400,
           bedrooms: 1,
           bathrooms: 1,
@@ -62,8 +62,8 @@ const initDb = () => {
           status: "Pending",
           views: 850,
           matches: 3,
-          lat: 40.8115,
-          lng: -73.9465,
+          lat: 34.0194,
+          lng: -118.2812,
           owner: {
             name: "Sarah Miller",
             avatar: "https://picsum.photos/seed/sarah/100/100"
@@ -72,7 +72,7 @@ const initDb = () => {
         {
           id: 3,
           title: "The Bradhurst",
-          address: "Upper West Side",
+          address: "Exposition Park, LA",
           price: 2100,
           bedrooms: 3,
           bathrooms: 2,
@@ -88,8 +88,8 @@ const initDb = () => {
           status: "Active",
           views: 391,
           matches: 1,
-          lat: 40.7870,
-          lng: -73.9754,
+          lat: 34.0215,
+          lng: -118.2925,
           owner: {
             name: "David Kim",
             avatar: "https://picsum.photos/seed/david/100/100"
@@ -100,7 +100,7 @@ const initDb = () => {
         {
           id: 1,
           name: "Sarah Miller",
-          bio: "Graduate student at Columbia. Quiet, focus-oriented, and loves coffee.",
+          bio: "Graduate student at USC. Quiet, focus-oriented, and loves coffee.",
           lifestyle: { cleanliness: "High", noise: "Low", schedule: "Early Bird" },
           avatar_url: "https://picsum.photos/seed/sarah/200/200",
           sync_score: 98

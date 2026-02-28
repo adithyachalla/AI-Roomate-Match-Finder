@@ -82,15 +82,10 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
         fixed inset-y-0 left-0 w-64 border-r border-slate-800 bg-navy-dark flex flex-col z-[70] transition-transform duration-300 lg:translate-x-0
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="p-6 flex items-center justify-between">
+        <div className="flex justify-center pt-12 pb-6 relative">
           <div className="flex items-center gap-3">
-            <div className="relative w-8 h-8">
-              <div className="absolute inset-0 border-[3px] border-primary rounded-sm rotate-45 transform -translate-x-1 -translate-y-0.5 opacity-90"></div>
-              <div className="absolute inset-0 border-[3px] border-accent-teal rounded-sm rotate-45 transform translate-x-1 translate-y-0.5"></div>
-            </div>
-            <span className="text-xl font-extrabold tracking-tight text-white">Room<span className="text-accent-teal">Sync</span></span>
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400">
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden absolute right-4 top-4 text-slate-400">
             <X size={24} />
           </button>
         </div>
