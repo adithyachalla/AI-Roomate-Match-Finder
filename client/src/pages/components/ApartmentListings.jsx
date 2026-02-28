@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, ChevronDown, Sparkles, Plus as PlusIcon, Minus as MinusIcon, Navigation, MapPin } from "lucide-react";
-import { motion } from "framer-motion";
+import { Search, ChevronDown, Sparkles, MapPin } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import ApartmentCard from "./ApartmentCard";
@@ -29,6 +28,8 @@ const ApartmentListings = ({ onViewDetail }) => {
   const [showPriceMenu, setShowPriceMenu] = useState(false);
   const [showBedMenu, setShowBedMenu] = useState(false);
   const [showAmenityMenu, setShowAmenityMenu] = useState(false);
+  const [showSortMenu, setShowSortMenu] = useState(false);
+  const [sortBy, setSortBy] = useState("Best Match");
   const [showMapOnMobile, setShowMapOnMobile] = useState(false);
 
   useEffect(() => {
@@ -79,8 +80,20 @@ const ApartmentListings = ({ onViewDetail }) => {
       );
     }
 
+    // Sorting
+    if (sortBy === "Cheapest") {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortBy === "Best Match") {
+      // For Best Match, we prioritize AI matches and then maybe views or just default order
+      result.sort((a, b) => {
+        if (a.is_ai_match && !b.is_ai_match) return -1;
+        if (!a.is_ai_match && b.is_ai_match) return 1;
+        return 0;
+      });
+    }
+
     setFilteredApartments(result);
-  }, [searchQuery, priceFilter, bedroomFilter, selectedAmenities, allApartments]);
+  }, [searchQuery, priceFilter, bedroomFilter, selectedAmenities, sortBy, allApartments]);
 
   const toggleAmenity = (amenity) => {
     setSelectedAmenities(prev => 
@@ -232,11 +245,27 @@ const ApartmentListings = ({ onViewDetail }) => {
         `}>
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-xl font-bold">{filteredApartments.length} Listings found</h1>
-            <div className="flex items-center gap-2 text-sm text-slate-400">
+            <div className="flex items-center gap-2 text-sm text-slate-400 relative">
               <span>Sort by:</span>
-              <button className="font-bold text-white flex items-center gap-1">
-                Best Match <ChevronDown size={16} />
+              <button 
+                onClick={() => setShowSortMenu(!showSortMenu)}
+                className="font-bold text-white flex items-center gap-1"
+              >
+                {sortBy} <ChevronDown size={16} />
               </button>
+              {showSortMenu && (
+                <div className="absolute top-full mt-2 right-0 w-40 bg-[#1c2127] border border-[#283039] rounded-xl shadow-2xl z-[60] p-2">
+                  {["Best Match", "Cheapest"].map(option => (
+                    <button 
+                      key={option}
+                      onClick={() => { setSortBy(option); setShowSortMenu(false); }}
+                      className={`w-full text-left px-4 py-2 hover:bg-slate-800 rounded-lg text-sm ${sortBy === option ? 'text-primary font-bold' : 'text-white'}`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           

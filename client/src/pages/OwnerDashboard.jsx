@@ -7,11 +7,18 @@ import ListerDashboard from "./components/ListerDashboard";
 import RoommateFinder from "./components/RoomateFinder";
 import PropertyDetail from "./components/PropertyDetail";
 
-export default function OwnerDashboard() {
+export default function App() {
   const [activeTab, setActiveTab] = useState("apartments");
   const [dashboardSubTab, setDashboardSubTab] = useState("overview");
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
   const [previousTab, setPreviousTab] = useState("apartments");
+
+  const handleTabChange = (tab) => {
+    if (tab === "dashboard") {
+      setDashboardSubTab("overview");
+    }
+    setActiveTab(tab);
+  };
 
   const navigateToDashboard = (subTab = "overview") => {
     setDashboardSubTab(subTab);
@@ -34,9 +41,9 @@ export default function OwnerDashboard() {
 
   return (
     <div className="dark h-screen flex flex-col overflow-hidden bg-background-dark text-white">
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Header activeTab={activeTab} setActiveTab={handleTabChange} />
       
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
