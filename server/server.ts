@@ -5,6 +5,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import cors from "cors";
+import connectDB from "./config/db.js";
+import Listing from "./models/Listing.js";
 
 dotenv.config();
 
@@ -13,89 +15,10 @@ const __dirname = path.dirname(__filename);
 
 const DB_FILE = path.join(__dirname, "db.json");
 
-// Simple NoSQL-like JSON storage
+// JSON storage for non-listing data (roommates, leads, messages, tenantMatches)
 const initDb = () => {
   if (!fs.existsSync(DB_FILE)) {
     const initialData = {
-      apartments: [
-        {
-          id: 1,
-          title: "Skyview Residences",
-          address: "University Park, LA",
-          price: 1850,
-          bedrooms: 2,
-          bathrooms: 2,
-          distance: "0.3 mi to Campus",
-          image_url: "https://picsum.photos/seed/apt1/800/600",
-          images: [
-            "https://picsum.photos/seed/apt1-1/800/600",
-            "https://picsum.photos/seed/apt1-2/800/600",
-            "https://picsum.photos/seed/apt1-3/800/600"
-          ],
-          amenities: ["Gym", "Doorman", "Laundry"],
-          is_ai_match: true,
-          status: "Active",
-          views: 1240,
-          matches: 8,
-          lat: 34.0259,
-          lng: -118.2879,
-          owner: {
-            name: "Alex Johnson",
-            avatar: "https://picsum.photos/seed/lister/100/100"
-          }
-        },
-        {
-          id: 2,
-          title: "Uptown Lofts",
-          address: "West Adams, LA",
-          price: 1400,
-          bedrooms: 1,
-          bathrooms: 1,
-          distance: "0.9 mi to Campus",
-          image_url: "https://picsum.photos/seed/apt2/800/600",
-          images: [
-            "https://picsum.photos/seed/apt2-1/800/600",
-            "https://picsum.photos/seed/apt2-2/800/600"
-          ],
-          amenities: ["Pet Friendly", "WiFi"],
-          is_ai_match: true,
-          status: "Pending",
-          views: 850,
-          matches: 3,
-          lat: 34.0194,
-          lng: -118.2812,
-          owner: {
-            name: "Sarah Miller",
-            avatar: "https://picsum.photos/seed/sarah/100/100"
-          }
-        },
-        {
-          id: 3,
-          title: "The Bradhurst",
-          address: "Exposition Park, LA",
-          price: 2100,
-          bedrooms: 3,
-          bathrooms: 2,
-          distance: "1.2 mi to Campus",
-          image_url: "https://picsum.photos/seed/apt3/800/600",
-          images: [
-            "https://picsum.photos/seed/apt3-1/800/600",
-            "https://picsum.photos/seed/apt3-2/800/600",
-            "https://picsum.photos/seed/apt3-3/800/600"
-          ],
-          amenities: ["Furnished", "Parking"],
-          is_ai_match: false,
-          status: "Active",
-          views: 391,
-          matches: 1,
-          lat: 34.0215,
-          lng: -118.2925,
-          owner: {
-            name: "David Kim",
-            avatar: "https://picsum.photos/seed/david/100/100"
-          }
-        }
-      ],
       roommates: [
         {
           id: 1,
@@ -139,56 +62,84 @@ const getData = () => JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
 const saveData = (data: any) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 
 async function startServer() {
+  // Connect to MongoDB
+  await connectDB();
+
   const app = express();
   const PORT = 5000;
 
   app.use(express.json());
   app.use(cors());
 
-  // API Routes
-  app.get("/api/apartments", (req, res) => {
-    const data = getData();
-    res.json(data.apartments);
-  });
+  // ─── LISTINGS ROUTES (MongoDB) ───────────────────────────────────────────
 
-  app.get("/api/apartments/:id", (req, res) => {
-    const data = getData();
-    const id = parseInt(req.params.id);
-    const apartment = data.apartments.find(apt => apt.id === id);
-    if (apartment) {
-      res.json(apartment);
-    } else {
-      res.status(404).json({ error: "Apartment not found" });
+  // GET all listings
+  app.get("/api/apartments", async (req, res) => {
+    try {
+      const listings = await Listing.find();
+      res.json(listings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch listings" });
     }
   });
 
-  app.put("/api/apartments/:id", (req, res) => {
-    const data = getData();
-    const id = parseInt(req.params.id);
-    const index = data.apartments.findIndex(apt => apt.id === id);
-    if (index !== -1) {
-      data.apartments[index] = { ...data.apartments[index], ...req.body };
-      saveData(data);
-      res.json(data.apartments[index]);
-    } else {
-      res.status(404).json({ error: "Apartment not found" });
+  // GET single listing by ID
+  app.get("/api/apartments/:id", async (req, res) => {
+    try {
+      const listing = await Listing.findById(req.params.id);
+      if (!listing) return res.status(404).json({ error: "Apartment not found" });
+      res.json(listing);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch listing" });
     }
   });
 
-  app.post("/api/apartments", (req, res) => {
-    const data = getData();
-    const newApartment = {
-      id: Date.now(),
-      ...req.body,
-      status: "Active",
-      views: 0,
-      matches: 0,
-      is_ai_match: false
-    };
-    data.apartments.push(newApartment);
-    saveData(data);
-    res.json(newApartment);
+  // POST create new listing
+  app.post("/api/apartments", async (req, res) => {
+    try {
+      const body = { ...req.body };
+
+      // Transform lat/lng from form into GeoJSON location for MongoDB
+      if (body.lat !== undefined && body.lng !== undefined) {
+        body.location = {
+          type: "Point",
+          coordinates: [parseFloat(body.lng), parseFloat(body.lat)] // [longitude, latitude]
+        };
+        delete body.lat;
+        delete body.lng;
+      }
+
+      const listing = await Listing.create(body);
+      res.json(listing);
+    } catch (error) {
+      console.error("Create listing error:", error);
+      res.status(500).json({ error: "Failed to create listing" });
+    }
   });
+
+  // PUT update listing
+  app.put("/api/apartments/:id", async (req, res) => {
+    try {
+      const listing = await Listing.findByIdAndUpdate(req.params.id, req.body, { new: true });
+      if (!listing) return res.status(404).json({ error: "Apartment not found" });
+      res.json(listing);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update listing" });
+    }
+  });
+
+  // DELETE listing
+  app.delete("/api/apartments/:id", async (req, res) => {
+    try {
+      const listing = await Listing.findByIdAndDelete(req.params.id);
+      if (!listing) return res.status(404).json({ error: "Apartment not found" });
+      res.json({ message: "Listing deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete listing" });
+    }
+  });
+
+  // ─── OTHER ROUTES (db.json — to be migrated later) ──────────────────────
 
   app.get("/api/roommates", (req, res) => {
     const data = getData();
@@ -212,7 +163,7 @@ async function startServer() {
       sender: req.body.sender || "Alex Johnson",
       recipient: req.body.recipient,
       text: req.body.text,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       unread: false
     };
     data.messages.push(newMessage);
