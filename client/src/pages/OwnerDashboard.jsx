@@ -40,10 +40,11 @@ export default function App() {
   };
 
   return (
-    <div className="dark h-screen flex flex-col overflow-hidden bg-background-dark text-white">
+    <div className="dark h-screen flex flex-col bg-background-dark text-white">
+      {/* allow vertical scrolling for page content */}
       <Header activeTab={activeTab} setActiveTab={handleTabChange} />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-y-auto">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -51,7 +52,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="h-full"
+            className="h-full overflow-y-auto"
           >
             {activeTab === "apartments" && <ApartmentListings onViewDetail={viewPropertyDetail} />}
             {activeTab === "post-property" && <PostProperty setActiveTab={setActiveTab} navigateToDashboard={navigateToDashboard} />}

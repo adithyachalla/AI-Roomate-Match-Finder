@@ -123,7 +123,7 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
   };
 
   return (
-    <main className="max-w-[1440px] mx-auto px-6 py-8">
+    <main className="max-w-[1440px] mx-auto px-6 py-8 overflow-y-auto">
       <div className="grid grid-cols-12 gap-8">
         <aside className="col-span-12 lg:col-span-3 space-y-6">
           <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-4">
