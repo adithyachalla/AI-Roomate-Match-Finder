@@ -7,6 +7,8 @@ import fs from "fs";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import Listing from "./models/Listing.js";
+import authRoutes from "./routes/auth.js";
+import { seedDummyUsers } from "./controllers/authController.js";
 
 dotenv.config();
 
@@ -62,14 +64,24 @@ const getData = () => JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
 const saveData = (data: any) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 
 async function startServer() {
-  // Connect to MongoDB
   await connectDB();
+
+  if (process.env.SEED_USERS !== "false") {
+    try {
+      await seedDummyUsers();
+    } catch (err) {
+      console.error("seedDummyUsers error:", err);
+    }
+  }
 
   const app = express();
   const PORT = 5000;
 
   app.use(express.json());
-  app.use(cors());
+  app.use(cors()); // <-- moved here so CORS applies to auth and all routes
+
+  // Mount auth routes (password -> OTP)
+  app.use("/api/auth", authRoutes);
 
   // ─── LISTINGS ROUTES (MongoDB) ───────────────────────────────────────────
 
