@@ -10,6 +10,9 @@ const ListingSchema = new mongoose.Schema(
     description: String,
     price: Number,
     images: [String],
+    bedrooms: Number,
+    bathrooms: Number,
+    distance: String,
 
     // Filters
     roomType: String,       // "Private", "Shared"
@@ -17,6 +20,16 @@ const ListingSchema = new mongoose.Schema(
 
     // Amenities
     amenities: [String],    // ["Wifi", "AC", "Gym"]
+
+    // Listing meta
+    is_ai_match: Boolean,
+    status: String,         // "Active", "Pending"
+    views: Number,
+    matches: Number,
+    owner: {
+      name: String,
+      avatar: String,
+    },
 
     // Geospatial — MUST follow this exact structure for $near to work
     location: {
