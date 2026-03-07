@@ -202,11 +202,11 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
                       </thead>
                       <tbody className="divide-y divide-slate-800">
                         {listings.slice(0, 3).map(listing => (
-                          <tr key={listing.id} className="cursor-pointer hover:bg-slate-800/30 transition-colors" onClick={() => onViewDetail(listing.id)}>
+                          <tr key={listing._id} className="cursor-pointer hover:bg-slate-800/30 transition-colors" onClick={() => onViewDetail(listing._id)}>
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 rounded-lg bg-slate-800 overflow-hidden shrink-0">
-                                  <img alt="Property" className="w-full h-full object-cover" src={listing.image_url} />
+                                  <img alt="Property" className="w-full h-full object-cover" src={listing.images?.[0]} />
                                 </div>
                                 <div className="min-w-0">
                                   <p className="font-bold text-sm text-white truncate">{listing.title}</p>
@@ -297,13 +297,13 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {listings.map(listing => (
-                  <div 
-                    key={listing.id} 
+                  <div
+                    key={listing._id}
                     className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden group cursor-pointer"
-                    onClick={() => onViewDetail(listing.id)}
+                    onClick={() => onViewDetail(listing._id)}
                   >
                     <div className="h-48 relative overflow-hidden">
-                      <img src={listing.image_url} alt={listing.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                      <img src={listing.images?.[0]} alt={listing.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                       <div className="absolute top-3 right-3 bg-navy-dark/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white uppercase">
                         {listing.status}
                       </div>
@@ -317,7 +317,7 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
-                              setEditingListingId(listing.id);
+                              setEditingListingId(listing._id);
                               setSubTab("edit-listing");
                             }}
                             className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary transition-colors"
