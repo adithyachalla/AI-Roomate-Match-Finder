@@ -163,9 +163,9 @@ const PropertyDetail = ({ propertyId, onBack, onMessageOwner }) => {
                 <div className="flex items-center gap-2 text-slate-400 font-medium">
                   <MapPin size={18} className="text-primary" />
                   {property.address}
-                  {property.lat && property.lng && (
+                  {property.location?.coordinates && (
                     <span className="text-xs text-slate-500 ml-2">
-                      ({Number(property.lat).toFixed(4)}, {Number(property.lng).toFixed(4)})
+                      ({Number(property.location.coordinates[1]).toFixed(4)}, {Number(property.location.coordinates[0]).toFixed(4)})
                     </span>
                   )}
                 </div>

@@ -280,7 +280,7 @@ const ApartmentListings = ({ onViewDetail }) => {
             </div>
           ) : (
             filteredApartments.map(apt => (
-              <ApartmentCard key={apt.id} apartment={apt} onClick={() => onViewDetail(apt.id)} />
+              <ApartmentCard key={apt._id} apartment={apt} onClick={() => onViewDetail(apt._id)} />
             ))
           )}
         </section>
@@ -302,25 +302,26 @@ const ApartmentListings = ({ onViewDetail }) => {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
               />
             {filteredApartments.map((apt) => {
-              const lat = parseFloat(apt.lat);
-              const lng = parseFloat(apt.lng);
-              
-              if (isNaN(lat) || isNaN(lng)) {
+              const coords = apt.location?.coordinates;
+              const lat = coords?.[1];
+              const lng = coords?.[0];
+
+              if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
                 return null;
               }
 
               return (
                 <Marker
-                  key={apt.id}
+                  key={apt._id}
                   position={[lat, lng]}
                 >
                   <Popup>
                     <div className="text-white p-1">
-                      <img src={apt.image_url} className="w-full h-20 object-cover rounded mb-2" alt="" />
+                      <img src={apt.images?.[0]} className="w-full h-20 object-cover rounded mb-2" alt="" />
                       <strong className="block text-sm">{apt.title}</strong>
                       <span className="text-xs text-slate-400">${apt.price.toLocaleString()}/mo</span>
-                      <button 
-                        onClick={() => onViewDetail(apt.id)}
+                      <button
+                        onClick={() => onViewDetail(apt._id)}
                         className="mt-2 w-full bg-primary text-white text-[10px] py-1 rounded font-bold"
                       >
                         View Details
