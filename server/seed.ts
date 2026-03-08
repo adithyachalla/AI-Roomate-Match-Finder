@@ -13,9 +13,9 @@ const seedListings = [
     bathrooms: 2,
     distance: "0.3 mi to Campus",
     images: [
-      "https://picsum.photos/seed/apt1-1/800/600",
-      "https://picsum.photos/seed/apt1-2/800/600",
-      "https://picsum.photos/seed/apt1-3/800/600",
+       "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80",
+       "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=800&q=80",
+       "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80"
     ],
     roomType: "Private",
     leaseDuration: "Full Year",
@@ -39,8 +39,9 @@ const seedListings = [
     bathrooms: 1,
     distance: "0.9 mi to Campus",
     images: [
-      "https://picsum.photos/seed/apt2-1/800/600",
-      "https://picsum.photos/seed/apt2-2/800/600",
+      "https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80"
     ],
     roomType: "Private",
     leaseDuration: "Semester",
@@ -64,9 +65,10 @@ const seedListings = [
     bathrooms: 2,
     distance: "1.2 mi to Campus",
     images: [
-      "https://picsum.photos/seed/apt3-1/800/600",
-      "https://picsum.photos/seed/apt3-2/800/600",
-      "https://picsum.photos/seed/apt3-3/800/600",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=800&q=80"
     ],
     roomType: "Shared",
     leaseDuration: "Full Year",
