@@ -1,6 +1,8 @@
+// server.ts — top of file (replace the existing top with this block)
+import "./config/loadEnv.js"; // load .env before any other modules
+
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -9,12 +11,13 @@ import connectDB from "./config/db.js";
 import Listing from "./models/Listing.js";
 import authRoutes from "./routes/auth.js";
 import { seedDummyUsers } from "./controllers/authController.js";
+import { transporter } from "./controllers/authController.js"; // optional: test email
 
-dotenv.config();
-
+// ESM-safe __filename / __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// place DB_FILE after __dirname is defined
 const DB_FILE = path.join(__dirname, "db.json");
 
 // JSON storage for non-listing data (roommates, leads, messages, tenantMatches)
@@ -59,13 +62,14 @@ const initDb = () => {
 };
 
 initDb();
-
 const getData = () => JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
 const saveData = (data: any) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 
 async function startServer() {
+  // connect to mongodb first
   await connectDB();
 
+  // optionally seed users
   if (process.env.SEED_USERS !== "false") {
     try {
       await seedDummyUsers();
@@ -77,11 +81,39 @@ async function startServer() {
   const app = express();
   const PORT = 5000;
 
+  // Global middleware
   app.use(express.json());
-  app.use(cors()); // <-- moved here so CORS applies to auth and all routes
+  app.use(cors());
 
   // Mount auth routes (password -> OTP)
   app.use("/api/auth", authRoutes);
+
+  // Quick test-email endpoint (convenience) — you can call POST /api/auth/test-email
+  // NOTE: the router already contains a test-email route if you used the new routes/auth.ts,
+  // but keeping this here is safe if you prefer it in server.ts.
+  app.post("/api/auth/test-email-local", async (req, res) => {
+    try {
+      const to = req.body?.to || process.env.SMTP_USER || "";
+      const mailOptions = {
+        from: process.env.EMAIL_FROM || process.env.SMTP_USER || "no-reply@roomsync.local",
+        to,
+        subject: "RoomSync test email",
+        text: "This is a test email from RoomSync — if you see this, SMTP is working."
+      };
+
+      if (!transporter) {
+        console.error("No transporter configured — check SMTP_* env vars.");
+        return res.status(500).json({ ok: false, message: "No SMTP configured (transporter null). Check .env" });
+      }
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log("Local test email sent:", info.messageId || info.response);
+      return res.json({ ok: true, info });
+    } catch (err) {
+      console.error("test-email-local error:", err);
+      return res.status(500).json({ ok: false, error: String(err) });
+    }
+  });
 
   // ─── LISTINGS ROUTES (MongoDB) ───────────────────────────────────────────
 
