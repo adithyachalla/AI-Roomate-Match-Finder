@@ -1,0 +1,193 @@
+{
+  "apartments": [
+    {
+      "id": 1,
+      "title": "Skyview Residences",
+      "address": "University Park, LA",
+      "price": 1850,
+      "bedrooms": 2,
+      "bathrooms": 2,
+      "distance": "0.3 mi to Campus",
+      "image_url": "https://picsum.photos/seed/apt1/800/600",
+      "images": [
+        "https://picsum.photos/seed/apt1-1/800/600",
+        "https://picsum.photos/seed/apt1-2/800/600",
+        "https://picsum.photos/seed/apt1-3/800/600"
+      ],
+      "amenities": [
+        "Gym",
+        "Doorman",
+        "Laundry"
+      ],
+      "is_ai_match": true,
+      "status": "Active",
+      "views": 1240,
+      "matches": 8,
+      "lat": 34.0259,
+      "lng": -118.2879,
+      "owner": {
+        "name": "Alex Johnson",
+        "avatar": "https://picsum.photos/seed/lister/100/100"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Uptown Lofts",
+      "address": "West Adams, LA",
+      "price": 1400,
+      "bedrooms": 1,
+      "bathrooms": 1,
+      "distance": "0.9 mi to Campus",
+      "image_url": "https://picsum.photos/seed/apt2/800/600",
+      "images": [
+        "https://picsum.photos/seed/apt2-1/800/600",
+        "https://picsum.photos/seed/apt2-2/800/600"
+      ],
+      "amenities": [
+        "Pet Friendly",
+        "WiFi"
+      ],
+      "is_ai_match": true,
+      "status": "Pending",
+      "views": 850,
+      "matches": 3,
+      "lat": 34.0194,
+      "lng": -118.2812,
+      "owner": {
+        "name": "Sarah Miller",
+        "avatar": "https://picsum.photos/seed/sarah/100/100"
+      }
+    },
+    {
+      "id": 3,
+      "title": "The Bradhurst",
+      "address": "Exposition Park, LA",
+      "price": 2100,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "distance": "1.2 mi to Campus",
+      "image_url": "https://picsum.photos/seed/apt3/800/600",
+      "images": [
+        "https://picsum.photos/seed/apt3-1/800/600",
+        "https://picsum.photos/seed/apt3-2/800/600",
+        "https://picsum.photos/seed/apt3-3/800/600"
+      ],
+      "amenities": [
+        "Furnished",
+        "Parking"
+      ],
+      "is_ai_match": false,
+      "status": "Active",
+      "views": 391,
+      "matches": 1,
+      "lat": 34.0215,
+      "lng": -118.2925,
+      "owner": {
+        "name": "David Kim",
+        "avatar": "https://picsum.photos/seed/david/100/100"
+      }
+    }
+  ],
+  "roommates": [
+    {
+      "id": 1,
+      "name": "Sarah Miller",
+      "bio": "Graduate student at USC. Quiet, focus-oriented, and loves coffee.",
+      "lifestyle": {
+        "cleanliness": "High",
+        "noise": "Low",
+        "schedule": "Early Bird"
+      },
+      "avatar_url": "https://picsum.photos/seed/sarah/200/200",
+      "sync_score": 98
+    },
+    {
+      "id": 2,
+      "name": "Alex Chen",
+      "bio": "Engineering major. Loves gaming and cooking. Looking for someone social.",
+      "lifestyle": {
+        "cleanliness": "Medium",
+        "noise": "Medium",
+        "schedule": "Night Owl"
+      },
+      "avatar_url": "https://picsum.photos/seed/alex/200/200",
+      "sync_score": 85
+    }
+  ],
+  "leads": [
+    {
+      "id": 1,
+      "name": "Marcus Chen",
+      "time": "2m ago",
+      "property": "Downtown Loft 4B",
+      "message": "Hi! Is this still available for August intake? I'm a graduate student..."
+    },
+    {
+      "id": 2,
+      "name": "Sarah Jenkins",
+      "time": "1h ago",
+      "property": "Greenview Heights",
+      "message": "Would love to schedule a virtual tour this Friday if possible."
+    }
+  ],
+  "messages": [
+    {
+      "id": 1,
+      "sender": "Marcus Chen",
+      "recipient": "Alex Johnson",
+      "text": "Is the security deposit refundable?",
+      "time": "10:30 AM",
+      "unread": true
+    },
+    {
+      "id": 2,
+      "sender": "Sarah Jenkins",
+      "recipient": "Alex Johnson",
+      "text": "Thanks for the tour!",
+      "time": "Yesterday",
+      "unread": false
+    },
+    {
+      "id": 3,
+      "sender": "Alex Chen",
+      "recipient": "Alex Johnson",
+      "text": "I'm interested in the 2BR suite.",
+      "time": "Monday",
+      "unread": false
+    },
+    {
+      "id": 1772928843277,
+      "sender": "Alex Johnson",
+      "recipient": "Marcus Chen",
+      "text": "yes",
+      "time": "04:14 PM",
+      "unread": false
+    }
+  ],
+  "tenantMatches": [
+    {
+      "id": 1,
+      "name": "David Kim",
+      "score": 96,
+      "property": "Skyview Residences",
+      "status": "Highly Compatible",
+      "avatar": "https://picsum.photos/seed/david/100/100"
+    },
+    {
+      "id": 2,
+      "name": "Emma Wilson",
+      "score": 92,
+      "property": "Uptown Lofts",
+      "status": "Great Match",
+      "avatar": "https://picsum.photos/seed/emma/100/100"
+    },
+    {
+      "id": 3,
+      "name": "Liam O'Brien",
+      "score": 89,
+      "property": "Skyview Residences",
+      "status": "Good Match",
+      "avatar": "https://picsum.photos/seed/liam/100/100"
+    }
+  ]
+}

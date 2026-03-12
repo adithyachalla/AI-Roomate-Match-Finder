@@ -1,7 +1,17 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Role({ next }) {
   const [role, setRole] = useState("student");
+  const navigate = useNavigate();
+
+  const handleContinue = () => {
+    if (role === "owner") {
+      navigate("/owner-dashboard");
+    } else {
+      next(); // student flow route
+    }
+  };
 
   return (
     <div className="bg-background-dark text-slate-100 min-h-screen flex flex-col items-center justify-center px-6 py-12">
@@ -88,7 +98,7 @@ export default function Role({ next }) {
         {/* CONTINUE */}
         <div className="space-y-4">
           <button
-            onClick={next}
+            onClick={handleContinue}
             className="w-full h-16 rounded-2xl bg-primary text-white text-lg font-black shadow-xl shadow-primary/25 hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] transition-all"
           >
             Continue
