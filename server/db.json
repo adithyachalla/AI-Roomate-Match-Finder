@@ -154,6 +154,14 @@
       "text": "I'm interested in the 2BR suite.",
       "time": "Monday",
       "unread": false
+    },
+    {
+      "id": 1772928843277,
+      "sender": "Alex Johnson",
+      "recipient": "Marcus Chen",
+      "text": "yes",
+      "time": "04:14 PM",
+      "unread": false
     }
   ],
   "tenantMatches": [

@@ -56,13 +56,13 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
       return;
     }
 
-    // Simulate upload by creating object URLs
-    const newImages = files.map(file => URL.createObjectURL(file));
-    // In a real app, you'd upload to a server and get URLs back.
-    // For this demo, we'll use picsum placeholders to ensure they persist across refreshes
-    const placeholderImages = files.map((_, i) => `https://picsum.photos/seed/upload${Date.now()}${i}/800/600`);
-    
-    setUploadedImages(prev => [...prev, ...placeholderImages]);
+    files.forEach(file => {
+       const reader = new FileReader();
+       reader.onloadend = () => {
+         setUploadedImages(prev => [...prev, reader.result]);
+       };
+       reader.readAsDataURL(file);
+     });
   };
 
   const validateForm = () => {
@@ -386,9 +386,9 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
             </div>
             <div className="p-2 space-y-1">
               {listings.slice(0, 3).map(listing => (
-                <div key={listing.id} onClick={() => navigateToDashboard("listings")} className="p-3 hover:bg-slate-800 rounded-xl flex items-center gap-3 transition-all cursor-pointer">
+                <div key={listing._id} onClick={() => navigateToDashboard("listings")} className="p-3 hover:bg-slate-800 rounded-xl flex items-center gap-3 transition-all cursor-pointer">
                   <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                    <img className="w-full h-full object-cover" src={listing.image_url} alt={listing.title} referrerPolicy="no-referrer" />
+                    <img className="w-full h-full object-cover"  src={listing.image_url || listing.images?.[0] || "https://via.placeholder.com/100"} alt={listing.title} referrerPolicy="no-referrer" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold truncate">{listing.title}</p>

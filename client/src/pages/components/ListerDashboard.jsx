@@ -223,7 +223,7 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
                               <div className="flex -space-x-2">
                                 {[1, 2].map(n => (
                                   <div key={n} className="w-6 h-6 rounded-full border-2 border-slate-900 bg-slate-300 overflow-hidden">
-                                    <img src={`https://picsum.photos/seed/user${n}/50/50`} alt="User" />
+                                    <img src={`https://images.unsplash.com/photo-${n === 1 ? '1500648767791-00dcc994a43e' : '1438761681033-6461ffad8d80'}?auto=format&fit=crop&w=50&q=80`} alt="User" />
                                   </div>
                                 ))}
                                 <div className="w-6 h-6 rounded-full border-2 border-slate-900 bg-accent-teal flex items-center justify-center text-[8px] font-bold text-navy-dark">+{listing.matches || 0}</div>
