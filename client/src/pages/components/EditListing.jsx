@@ -18,7 +18,7 @@ const EditListing = ({ listingId, onBack, onSave }) => {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/apartments/${listingId}`)
+    fetch(`http://localhost:5001/api/apartments/${listingId}`)
       .then(res => res.json())
       .then(data => {
         setListing(data);
@@ -61,7 +61,7 @@ const EditListing = ({ listingId, onBack, onSave }) => {
         lng: formData.lng ? parseFloat(formData.lng) : null,
         price: parseFloat(formData.price)
       };
-      const response = await fetch(`http://localhost:5000/api/apartments/${listingId}`, {
+      const response = await fetch(`http://localhost:5001/api/apartments/${listingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

@@ -12,7 +12,7 @@ const PropertyDetail = ({ propertyId, onBack, onMessageOwner }) => {
   const [direction, setDirection] = useState(0);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/apartments/${propertyId}`)
+    fetch(`http://localhost:5001/api/apartments/${propertyId}`)
       .then(res => res.json())
       .then(data => {
         setProperty(data);
