@@ -14,11 +14,11 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const fetchListings = () => {
-    fetch("http://localhost:5000/api/apartments").then(res => res.json()).then(setListings);
+    fetch("http://localhost:5001/api/apartments").then(res => res.json()).then(setListings);
   };
 
   const fetchMessages = () => {
-    fetch("http://localhost:5000/api/messages").then(res => res.json()).then(setMessages);
+    fetch("http://localhost:5001/api/messages").then(res => res.json()).then(setMessages);
   };
 
   useEffect(() => {
@@ -27,9 +27,9 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
 
   useEffect(() => {
     fetchListings();
-    fetch("http://localhost:5000/api/roommates").then(res => res.json()).then(setRoommates);
+    fetch("http://localhost:5001/api/roommates").then(res => res.json()).then(setRoommates);
     fetchMessages();
-    fetch("http://localhost:5000/api/tenant-matches").then(res => res.json()).then(setTenantMatches);
+    fetch("http://localhost:5001/api/tenant-matches").then(res => res.json()).then(setTenantMatches);
   }, []);
 
   const handleSubTabChange = (tab) => {
@@ -41,7 +41,7 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
     if (!newMessageText.trim() || !selectedConversation) return;
 
     try {
-      const response = await fetch("http://localhost:5000/api/messages", {
+      const response = await fetch("http://localhost:5001/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

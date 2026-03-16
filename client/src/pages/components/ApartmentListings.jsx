@@ -33,7 +33,7 @@ const ApartmentListings = ({ onViewDetail }) => {
   const [showMapOnMobile, setShowMapOnMobile] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/apartments")
+    fetch("http://localhost:5001/api/apartments")
       .then(res => res.json())
       .then(data => {
         setAllApartments(data);

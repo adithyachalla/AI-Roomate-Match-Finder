@@ -15,7 +15,7 @@ const OtpSchema = new Schema<IOtp>(
     otpHash: { type: String, required: true },
     otpSalt: { type: String, required: true },
     createdAt: { type: Date, default: () => new Date() },
-    expiresAt: { type: Date, required: true, index: true },
+    expiresAt: { type: Date, required: true },
     attempts: { type: Number, default: 0 }
   },
   { collection: "otps" }

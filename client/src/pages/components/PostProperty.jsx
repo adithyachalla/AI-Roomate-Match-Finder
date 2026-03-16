@@ -21,8 +21,8 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/apartments").then(res => res.json()).then(setListings);
-    fetch("http://localhost:5000/api/messages").then(res => res.json()).then(data => {
+    fetch("http://localhost:5001/api/apartments").then(res => res.json()).then(setListings);
+    fetch("http://localhost:5001/api/messages").then(res => res.json()).then(data => {
       const sorted = [...data].sort((a, b) => b.id - a.id);
       setMessages(sorted);
     });
@@ -102,7 +102,7 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
         }
       };
 
-      const response = await fetch("http://localhost:5000/api/apartments", {
+      const response = await fetch("http://localhost:5001/api/apartments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
