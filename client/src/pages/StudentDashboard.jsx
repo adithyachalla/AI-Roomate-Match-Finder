@@ -97,77 +97,100 @@ export default function StudentDashboard() {
     <div className="flex h-screen bg-background-dark text-white">
 
       {/* SIDEBAR */}
-      <aside className="w-64 bg-card-dark border-r border-white/10 p-6 flex flex-col">
+ <aside className="w-64 bg-gradient-to-b from-slate-900 to-slate-950 border-r border-white/10 p-6 flex flex-col">
 
-        {/* LOGO */}
-        <div className="flex items-center gap-3 mb-10">
-          <div className="relative w-8 h-8">
-            <div className="absolute inset-0 border-[3px] border-white/20 rounded-md rotate-45 -translate-x-1 -translate-y-1"></div>
-            <div className="absolute inset-0 border-[3px] border-accent-teal rounded-md rotate-45 translate-x-1 translate-y-1"></div>
-          </div>
+  {/* LOGO */}
+  <div className="flex items-center gap-3 mb-10">
+    <div className="relative w-8 h-8">
+      <div className="absolute inset-0 border-[3px] border-white/20 rounded-md rotate-45 -translate-x-1 -translate-y-1"></div>
+      <div className="absolute inset-0 border-[3px] border-accent-teal rounded-md rotate-45 translate-x-1 translate-y-1"></div>
+    </div>
 
-          <h2 className="text-white text-xl font-black tracking-tight">
-            Room<span className="text-accent-teal">Sync</span>
-          </h2>
-        </div>
+    <h2 className="text-white text-xl font-black tracking-tight">
+      Room<span className="text-accent-teal">Sync</span>
+    </h2>
+  </div>
 
-        {/* NAV */}
-        <div className="space-y-4 text-sm">
-          <button className="text-primary font-bold">Top Matches</button>
-          <button className="hover:text-white text-slate-400">Browse Roommates</button>
-          <button className="hover:text-white text-slate-400">Saved Profiles</button>
-          <button className="hover:text-white text-slate-400">Conversations</button>
-        </div>
+  {/* NAV */}
+  <div className="space-y-3 text-sm">
 
-        {/* PROFILE */}
-        <div className="mt-auto pt-6 border-t border-white/10">
+    <button className="w-full text-left px-3 py-2 rounded-lg bg-primary/10 text-primary font-bold">
+      Top Matches
+    </button>
 
-          <div className="flex items-center gap-3 mb-4">
-            <img
-              src={user?.profilePic?.trim() ? user.profilePic : "/default-avatar.png"}
-              alt="profile"
-              className="w-10 h-10 rounded-full object-cover"
-            />
-            <div>
-              <p className="font-semibold">
-                {user?.fullname || "Complete profile"}
-              </p>
-              <p className="text-xs text-slate-400">
-                {user?.role || "student"}
-              </p>
-            </div>
-          </div>
+    <button className="w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition">
+      Browse Roommates
+    </button>
 
-          <button
-            onClick={() => navigate("/onboarding")}
-            className="block w-full text-left mb-2 text-sm text-slate-300"
-          >
-            Edit Profile
-          </button>
+    <button className="w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition">
+      Saved Profiles
+    </button>
 
-          {/* ✅ SWITCH ROLE BUTTON */}
-          <button
-            onClick={toggleRole}
-            className="w-full bg-primary text-white py-2 rounded-lg text-sm font-bold mb-2"
-          >
-            Switch Role
-          </button>
+    <button className="w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition">
+      Conversations
+    </button>
 
-          <button
-            onClick={logout}
-            className="block w-full text-left mb-2 text-sm text-slate-300"
-          >
-            Logout
-          </button>
+  </div>
 
-          <button
-            onClick={handleDeleteAccount}
-            className="w-full bg-red-600 py-2 rounded-lg text-sm font-bold"
-          >
-            Delete Account
-          </button>
-        </div>
-      </aside>
+  {/* PROFILE SECTION */}
+  <div className="mt-auto pt-6 border-t border-white/10">
+
+    {/* USER INFO */}
+    <div className="flex items-center gap-3 mb-5">
+      <img
+        src={user?.profilePic || "/default-avatar.png"}
+        alt="profile"
+        className="w-12 h-12 rounded-full border border-white/20 object-cover"
+      />
+
+      <div>
+        <p className="text-sm font-semibold text-white">
+          {user?.fullname || "User"}
+        </p>
+        <p className="text-xs text-slate-400">
+          {user?.role || "student"}
+        </p>
+      </div>
+    </div>
+
+    {/* ACTIONS */}
+<div className="space-y-3">
+
+  {/* EDIT PROFILE */}
+  <button
+    onClick={() => navigate("/onboarding")}
+    className="w-full flex items-center justify-center gap-2 border border-white/10 py-2 rounded-xl text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition"
+  >
+    ✏️ Edit Profile
+  </button>
+
+  {/* SWITCH ROLE */}
+  <button
+    onClick={toggleRole}
+    className="w-full bg-primary text-white py-2 rounded-xl text-sm font-bold shadow-md hover:scale-[1.02] transition"
+  >
+    Switch Role
+  </button>
+
+  {/* LOGOUT */}
+  <button
+    onClick={logout}
+    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition"
+  >
+    🚪 Logout
+  </button>
+
+  {/* DELETE */}
+  <button
+    onClick={handleDeleteAccount}
+    className="w-full bg-red-600 text-white py-2 rounded-xl text-sm font-bold shadow-md hover:bg-red-700 transition"
+  >
+    Delete Account
+  </button>
+
+</div>
+  </div>
+</aside>
 
       {/* MAIN */}
       <main className="flex-1 p-8 overflow-y-auto">
@@ -179,38 +202,79 @@ export default function StudentDashboard() {
         )}
 
         {/* PROFILE CARD */}
-        <div className="bg-card-dark p-6 rounded-xl mb-6 border border-white/10">
-          <h2 className="text-lg font-bold mb-4">Your Profile</h2>
+<div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-2xl mb-6 border border-white/10 shadow-xl">
 
-          <div className="grid grid-cols-2 gap-4 text-sm">
+  {/* Header */}
+  <div className="flex items-center justify-between mb-6">
+    <h2 className="text-xl font-bold text-white">
+      Your Profile
+    </h2>
 
-            <p>
-              <span className="text-slate-400">Budget:</span>{" "}
-              {user?.livingPreferences?.budget ?? "Not set"}
-            </p>
+    <div className="text-xs px-3 py-1 bg-primary/20 text-primary rounded-full font-semibold">
+      Active
+    </div>
+  </div>
 
-            <p>
-              <span className="text-slate-400">Move-in:</span>{" "}
-              {user?.livingPreferences?.moveIn || "Not set"}
-            </p>
+  {/* Grid */}
+  <div className="grid grid-cols-2 gap-6 text-sm">
 
-            <p>
-              <span className="text-slate-400">Sleep:</span>{" "}
-              {user?.lifestyle?.sleep || "Not set"}
-            </p>
+    {/* Budget */}
+    <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex items-center gap-3">
+      <span className="text-xl">💰</span>
+      <div>
+        <p className="text-slate-400 text-xs">Budget</p>
+        <p className="text-lg font-bold text-white">
+          ${user?.livingPreferences?.budget ?? "Not set"}
+        </p>
+      </div>
+    </div>
 
-            <p>
-              <span className="text-slate-400">Social:</span>{" "}
-              {user?.lifestyle?.social || "Not set"}
-            </p>
+    {/* Move-in */}
+    <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex items-center gap-3">
+      <span className="text-xl">📅</span>
+      <div>
+        <p className="text-slate-400 text-xs">Move-in</p>
+        <p className="text-lg font-bold text-white">
+          {user?.livingPreferences?.moveIn || "Not set"}
+        </p>
+      </div>
+    </div>
 
-            <p>
-              <span className="text-slate-400">Cleanliness:</span>{" "}
-              {user?.lifestyle?.cleanliness ?? "Not set"}
-            </p>
+    {/* Sleep */}
+    <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex items-center gap-3">
+      <span className="text-xl">🌙</span>
+      <div>
+        <p className="text-slate-400 text-xs">Sleep</p>
+        <p className="text-lg font-bold text-white capitalize">
+          {user?.lifestyle?.sleep || "Not set"}
+        </p>
+      </div>
+    </div>
 
-          </div>
-        </div>
+    {/* Social */}
+    <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex items-center gap-3">
+      <span className="text-xl">👥</span>
+      <div>
+        <p className="text-slate-400 text-xs">Social</p>
+        <p className="text-lg font-bold text-white capitalize">
+          {user?.lifestyle?.social || "Not set"}
+        </p>
+      </div>
+    </div>
+
+    {/* Cleanliness */}
+    <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex items-center gap-3 col-span-2">
+      <span className="text-xl">🧼</span>
+      <div>
+        <p className="text-slate-400 text-xs">Cleanliness</p>
+        <p className="text-lg font-bold text-white">
+          Level {user?.lifestyle?.cleanliness ?? "Not set"}
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
 
         {/* MATCHES */}
         <h1 className="text-2xl font-bold mb-4">
@@ -219,30 +283,41 @@ export default function StudentDashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-          {[1,2,3].map((i) => (
-            <div
-              key={i}
-              className="bg-card-dark rounded-xl border border-white/10 p-4 hover:scale-[1.02] transition"
-            >
-              <img
-                src="/default-avatar.png"
-                alt="match"
-                className="h-40 w-full rounded-lg mb-4 object-cover"
-              />
+{[1,2,3].map((i) => (
+  <div
+    key={i}
+    className="bg-card-dark rounded-xl border border-white/10 p-4 hover:scale-[1.03] transition shadow-lg"
+  >
+    {/* 🔥 Avatar + Gradient */}
+    <div className="h-40 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-indigo-500/30 via-purple-500/20 to-blue-500/30">
+      <img
+        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=match${i}`}
+        alt="match"
+        className="w-20 h-20 rounded-full bg-white"
+      />
+    </div>
 
-              <h3 className="font-bold text-lg mb-1">
-                Match {i}
-              </h3>
+    {/* Name */}
+    <h3 className="font-bold text-lg mb-1">
+      Match {i}
+    </h3>
 
-              <p className="text-sm text-slate-400 mb-3">
-                Compatible roommate profile
-              </p>
+    {/* Description */}
+    <p className="text-sm text-slate-400 mb-3">
+      Compatible roommate profile
+    </p>
 
-              <button className="w-full bg-primary py-2 rounded-lg font-bold">
-                View Profile
-              </button>
-            </div>
-          ))}
+    {/* Compatibility badge */}
+    <div className="text-xs text-green-400 mb-3 font-semibold">
+      ⭐ {90 - i * 2}% Match
+    </div>
+
+    {/* Button */}
+    <button className="w-full bg-primary py-2 rounded-lg font-bold hover:opacity-90">
+      View Profile
+    </button>
+  </div>
+))}
 
         </div>
 
