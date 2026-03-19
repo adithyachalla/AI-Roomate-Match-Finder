@@ -5,6 +5,7 @@ export default function StudentDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(undefined);
 
+  // ✅ FIXED useEffect
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("user"));
 
@@ -24,35 +25,66 @@ export default function StudentDashboard() {
     navigate("/login");
   };
 
-  const handleDeleteAccount = async () => {
-    const stored = JSON.parse(localStorage.getItem("user"));
+  // ✅ SWITCH ROLE FUNCTION
+  const toggleRole = () => {
+    const currentRole = user?.role || "student";
 
-    await fetch("http://localhost:5001/api/auth/resend-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: stored.email })
-    });
-
-    const otp = prompt("Enter OTP to delete account:");
-    if (!otp) return;
-
-    const verify = await fetch("http://localhost:5001/api/auth/verify-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: stored.email, otp })
-    });
-
-    if (!verify.ok) {
-      alert("Invalid OTP");
-      return;
+    if (currentRole === "student") {
+      navigate("/owner-dashboard");
+    } else {
+      navigate("/student-dashboard");
     }
+  };
 
-    await fetch(`http://localhost:5001/api/user/delete/${stored._id}`, {
-      method: "DELETE"
-    });
+  // ✅ DELETE ACCOUNT
+  const handleDeleteAccount = async () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("user"));
 
-    localStorage.clear();
-    window.location.href = "/signup";
+      if (!stored?.email || !stored?._id) {
+        alert("User session missing. Please login again.");
+        return;
+      }
+
+      await fetch("http://localhost:5001/api/auth/resend-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email: stored.email })
+      });
+
+      const otp = prompt("Enter OTP to delete account:");
+      if (!otp) return;
+
+      const verify = await fetch("http://localhost:5001/api/auth/verify-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: stored.email,
+          otp
+        })
+      });
+
+      if (!verify.ok) {
+        alert("Invalid OTP");
+        return;
+      }
+
+      await fetch(`http://localhost:5001/api/user/delete/${stored._id}`, {
+        method: "DELETE"
+      });
+
+      localStorage.clear();
+      alert("Account deleted successfully");
+      window.location.href = "/signup";
+
+    } catch (err) {
+      console.error(err);
+      alert("Delete failed");
+    }
   };
 
   if (user === undefined) {
@@ -67,7 +99,7 @@ export default function StudentDashboard() {
       {/* SIDEBAR */}
       <aside className="w-64 bg-card-dark border-r border-white/10 p-6 flex flex-col">
 
-        {/* 🔥 LOGO */}
+        {/* LOGO */}
         <div className="flex items-center gap-3 mb-10">
           <div className="relative w-8 h-8">
             <div className="absolute inset-0 border-[3px] border-white/20 rounded-md rotate-45 -translate-x-1 -translate-y-1"></div>
@@ -113,6 +145,14 @@ export default function StudentDashboard() {
             Edit Profile
           </button>
 
+          {/* ✅ SWITCH ROLE BUTTON */}
+          <button
+            onClick={toggleRole}
+            className="w-full bg-primary text-white py-2 rounded-lg text-sm font-bold mb-2"
+          >
+            Switch Role
+          </button>
+
           <button
             onClick={logout}
             className="block w-full text-left mb-2 text-sm text-slate-300"
@@ -132,7 +172,6 @@ export default function StudentDashboard() {
       {/* MAIN */}
       <main className="flex-1 p-8 overflow-y-auto">
 
-        {/* WARNING */}
         {isEmptyProfile && (
           <div className="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded mb-6">
             Your profile is incomplete. Complete it to get better matches.
