@@ -1,9 +1,12 @@
 import { useState } from "react";
 
-export default function LivingPreferences({ next, back }) {
+export default function LivingPreferences({ next, setData }) {
   const [budget, setBudget] = useState(1200);
   const [entireUnit, setEntireUnit] = useState(true);
-  const [neighborhoods, setNeighborhoods] = useState(["University City", "North Campus"]);
+  const [neighborhoods, setNeighborhoods] = useState([
+    "University City",
+    "North Campus"
+  ]);
   const [moveIn, setMoveIn] = useState("2024-08-15");
 
   const toggleNeighborhood = (name) => {
@@ -14,6 +17,17 @@ export default function LivingPreferences({ next, back }) {
     );
   };
 
+  // ✅ NEW: save data before moving forward
+  const handleNext = () => {
+    setData({
+      budget,
+      entireUnit,
+      neighborhoods,
+      moveIn
+    });
+    next();
+  };
+
   return (
     <div className="bg-background-dark text-slate-100 min-h-screen flex flex-col items-center justify-center px-6 py-12">
 
@@ -21,7 +35,6 @@ export default function LivingPreferences({ next, back }) {
       <div className="mb-10 flex flex-col items-center">
         <div className="flex items-center gap-4 mb-4">
 
-          {/* Diamond Logo */}
           <div className="relative w-10 h-10">
             <div className="absolute inset-0 border-[3px] border-white/20 rounded-md rotate-45 -translate-x-1 -translate-y-1"></div>
             <div className="absolute inset-0 border-[3px] border-accent-teal rounded-md rotate-45 translate-x-1 translate-y-1"></div>
@@ -33,7 +46,7 @@ export default function LivingPreferences({ next, back }) {
         </div>
 
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
-          Step 4 of 6: Housing Preferences
+          Step 2 of 4: Housing Preferences
         </div>
       </div>
 
@@ -84,7 +97,9 @@ export default function LivingPreferences({ next, back }) {
             <button
               onClick={() => setEntireUnit(!entireUnit)}
               className={`px-4 py-2 rounded-xl font-bold text-xs ${
-                entireUnit ? "bg-primary text-white" : "bg-white/10 text-slate-400"
+                entireUnit
+                  ? "bg-primary text-white"
+                  : "bg-white/10 text-slate-400"
               }`}
             >
               {entireUnit ? "Entire Unit" : "Individual Room"}
@@ -108,7 +123,7 @@ export default function LivingPreferences({ next, back }) {
                 <button
                   key={n}
                   onClick={() => toggleNeighborhood(n)}
-                  className={`p-3 text-xs font-bold rounded-xl border transition-all ${
+                  className={`p-3 text-xs font-bold rounded-xl border ${
                     neighborhoods.includes(n)
                       ? "border-primary bg-primary/10 text-white"
                       : "border-white/10 bg-white/5 text-slate-400 hover:bg-white/10"
@@ -134,19 +149,13 @@ export default function LivingPreferences({ next, back }) {
           </div>
         </div>
 
-        {/* Buttons */}
-        <div className="space-y-4">
+        {/* BUTTON */}
+        <div>
           <button
-            onClick={next}
-            className="w-full h-16 rounded-2xl bg-primary text-white text-lg font-black shadow-xl shadow-primary/25 hover:scale-[1.01] transition-all"
+            onClick={handleNext}
+            className="w-full h-16 rounded-2xl bg-primary text-white text-lg font-black shadow-xl hover:scale-[1.01] transition-all"
           >
             Continue
-          </button>
-          <button
-            onClick={back}
-            className="w-full h-12 text-slate-500 hover:text-slate-300 font-bold text-sm uppercase tracking-widest"
-          >
-            ← Back
           </button>
         </div>
       </div>

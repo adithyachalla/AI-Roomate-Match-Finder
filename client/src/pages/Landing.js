@@ -27,8 +27,9 @@ function Landing() {
       Log In
     </Link>
 
-    <Link to="/onboarding" className="px-12 py-5 bg-primary text-white text-xl font-black rounded-2xl shadow-2xl">Get Started</Link>
-
+   <Link to="/signup" className="flex items-center justify-center rounded-2xl px-12 py-4 bg-primary text-white text-lg font-black shadow-2xl shadow-primary/40 hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all">
+  Get Started
+</Link>
   </div>
 
 </header>
@@ -42,8 +43,8 @@ function Landing() {
       Next-Gen Student Matching
     </div>
 
-  <h1 class="text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.1]">
-                Find your home,<br/>find your <span class="text-accent-teal">crew</span>.
+  <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.1]">
+                Find your home,<br/>find your <span className="text-accent-teal">crew</span>.
             </h1>
 
     <p className="text-slate-400 text-lg lg:text-2xl leading-relaxed max-w-2xl mx-auto font-medium">
@@ -53,9 +54,9 @@ function Landing() {
     {/* CTA Row */}
     <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
 
-    <Link to="/onboarding" className="flex items-center justify-center rounded-2xl px-12 py-4 bg-primary text-white text-lg font-black shadow-2xl shadow-primary/40 hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all">
-     Get Started
-    </Link>
+  <Link to="/signup" className="px-12 py-5 bg-primary text-white text-xl font-black rounded-2xl shadow-2xl">
+    Get Started 
+  </Link>
 
 
       <div className="flex items-center gap-4 px-6 py-3 rounded-2xl bg-white/5 border border-white/10">
@@ -187,9 +188,9 @@ function Landing() {
           <h2 className="text-white text-4xl lg:text-6xl font-black">
             Ready for a better roommate experience?
           </h2>
-          <Link to="/onboarding" className="mt-10 inline-block bg-primary text-white text-xl font-black px-14 py-6 rounded-2xl shadow-2xl shadow-primary/30 hover:scale-105 transition-all">
-            Get Started Free
-          </Link>
+<Link to="/signup" className="mt-10 inline-block bg-primary text-white text-xl font-black px-14 py-6 rounded-2xl shadow-2xl shadow-primary/30 hover:scale-105 transition-all">
+  Get Started Free
+</Link>
         </div>
       </section>
 

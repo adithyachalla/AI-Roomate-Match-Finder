@@ -154,7 +154,16 @@ export async function verifyOtp(req: Request, res: Response) {
     await Otp.deleteMany({ userId: user._id });
 
     const token = jwt.sign({ sub: user._id.toString(), email: user.email }, JWT_SECRET, { expiresIn: "6h" });
-    return res.json({ message: "Login successful", token });
+    return res.json({
+  message: "Login successful",
+  token,
+  user: {
+    _id: user._id,
+    username: user.username,
+    fullname: user.fullname,
+    email: user.email
+  }
+});
   } catch (err) {
     console.error("verifyOtp error", err);
     return res.status(500).json({ message: "Server error" });

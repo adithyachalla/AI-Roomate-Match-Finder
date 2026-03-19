@@ -1,9 +1,19 @@
 import { useState } from "react";
 
-export default function LifestylePreferences({ next, back }) {
+export default function LifestylePreferences({ next, setData }) {
   const [sleep, setSleep] = useState("night");
   const [social, setSocial] = useState("social");
   const [cleanliness, setCleanliness] = useState(2);
+
+  // ✅ NEW: save data before going next
+  const handleNext = () => {
+    setData({
+      sleep,
+      social,
+      cleanliness
+    });
+    next();
+  };
 
   return (
     <div className="bg-background-dark text-white min-h-screen flex flex-col items-center justify-center px-6 py-12">
@@ -12,7 +22,6 @@ export default function LifestylePreferences({ next, back }) {
       <div className="mb-10 flex flex-col items-center">
         <div className="flex items-center gap-4 mb-4">
 
-          {/* RoomSync Diamond Logo */}
           <div className="relative w-10 h-10">
             <div className="absolute inset-0 border-[3px] border-white/20 rounded-md rotate-45 -translate-x-1 -translate-y-1"></div>
             <div className="absolute inset-0 border-[3px] border-accent-teal rounded-md rotate-45 translate-x-1 translate-y-1"></div>
@@ -24,7 +33,7 @@ export default function LifestylePreferences({ next, back }) {
         </div>
 
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
-          Step 5 of 6: Lifestyle Setup
+          Step 3 of 4: Lifestyle Setup
         </div>
       </div>
 
@@ -33,7 +42,7 @@ export default function LifestylePreferences({ next, back }) {
 
         <div className="text-center mb-10">
           <h1 className="text-3xl font-extrabold mb-2">
-           Personalize Your Match
+            Personalize Your Match
           </h1>
           <p className="text-slate-400 text-sm">
             Define your daily rhythm to help our AI find your ideal roommate.
@@ -50,7 +59,7 @@ export default function LifestylePreferences({ next, back }) {
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => setSleep("early")}
-                className={`p-6 rounded-xl border transition-all ${
+                className={`p-6 rounded-xl border ${
                   sleep === "early"
                     ? "border-primary bg-primary/10"
                     : "border-white/10 bg-white/[0.02]"
@@ -64,7 +73,7 @@ export default function LifestylePreferences({ next, back }) {
 
               <button
                 onClick={() => setSleep("night")}
-                className={`p-6 rounded-xl border transition-all ${
+                className={`p-6 rounded-xl border ${
                   sleep === "night"
                     ? "border-primary bg-primary/10"
                     : "border-white/10 bg-white/[0.02]"
@@ -86,7 +95,7 @@ export default function LifestylePreferences({ next, back }) {
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => setSocial("social")}
-                className={`p-6 rounded-xl border transition-all ${
+                className={`p-6 rounded-xl border ${
                   social === "social"
                     ? "border-primary bg-primary/10"
                     : "border-white/10 bg-white/[0.02]"
@@ -100,7 +109,7 @@ export default function LifestylePreferences({ next, back }) {
 
               <button
                 onClick={() => setSocial("private")}
-                className={`p-6 rounded-xl border transition-all ${
+                className={`p-6 rounded-xl border ${
                   social === "private"
                     ? "border-primary bg-primary/10"
                     : "border-white/10 bg-white/[0.02]"
@@ -131,20 +140,14 @@ export default function LifestylePreferences({ next, back }) {
           </section>
         </div>
 
-        {/* Buttons */}
-        <div className="mt-12 space-y-4">
+        {/* BUTTON */}
+        <div className="mt-12">
           <button
-            onClick={next}
-            className="w-full bg-primary text-white font-bold py-4 rounded-full shadow-lg shadow-primary/30 flex justify-center items-center gap-2"
+            onClick={handleNext}
+            className="w-full bg-primary text-white font-bold py-4 rounded-full shadow-lg flex justify-center items-center gap-2"
           >
             Continue
             <span className="material-symbols-outlined">arrow_forward</span>
-          </button>
-          <button
-            onClick={back}
-            className="w-full text-slate-500 hover:text-white font-bold text-sm"
-          >
-            ← Back
           </button>
         </div>
       </div>

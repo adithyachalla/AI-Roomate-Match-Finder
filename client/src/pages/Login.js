@@ -22,7 +22,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
+    localStorage.removeItem("isNewUser");
     const emailTrim = email.toLowerCase().trim();
     if (!isValidUscEmail(emailTrim)) {
       setError("Please sign in with an @usc.edu email.");
@@ -63,6 +63,9 @@ export default function Login() {
       // success -> OTP sent. store pendingEmail and navigate to OTP verify page
       if (data.message === "otp_sent") {
         localStorage.setItem("pendingEmail", emailTrim);
+        localStorage.setItem("isNewUser", "false");
+        localStorage.setItem("role", "student");
+        
         navigate("/otp-verify");
         return;
       }
@@ -70,7 +73,8 @@ export default function Login() {
       // fallback: if backend returned token directly (unlikely for login), store it
       if (data.token) {
         localStorage.setItem("token", data.token);
-        navigate("/onboarding");
+        localStorage.setItem("role", "student");
+        navigate("/student-dashboard");
         return;
       }
 

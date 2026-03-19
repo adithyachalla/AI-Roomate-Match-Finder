@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
+import { useNavigate } from "react-router-dom";
 const Header = ({ activeTab, setActiveTab }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const navItems = [
     { id: "roommates", label: "Find Roommates" },
@@ -11,10 +12,14 @@ const Header = ({ activeTab, setActiveTab }) => {
     { id: "dashboard", label: "Dashboard" },
   ];
 
-  const handleTabClick = (id) => {
-    setActiveTab(id);
-    setIsMenuOpen(false);
-  };
+const handleTabClick = (id) => {
+  setActiveTab(id);
+  setIsMenuOpen(false);
+
+  if (id === "dashboard") {
+    navigate("/owner-dashboard");
+  }
+};
 
   return (
     <header className="flex items-center justify-between border-b border-solid border-slate-800 px-4 md:px-6 py-3 bg-background-dark z-[10000] sticky top-0">
@@ -55,7 +60,22 @@ const Header = ({ activeTab, setActiveTab }) => {
             List a Property
           </button>
           <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8 md:size-10 border-2 border-primary/20" style={{ backgroundImage: 'url("https://picsum.photos/seed/user/100/100")' }}></div>
-          
+          <button
+  onClick={() => {
+    const role = localStorage.getItem("role");
+
+    if (role === "student") {
+      localStorage.setItem("role", "owner");
+      navigate("/owner-dashboard");
+    } else {
+      localStorage.setItem("role", "student");
+      navigate("/student-dashboard");
+    }
+  }}
+  className="hidden md:block px-3 py-2 bg-primary text-white rounded-xl text-xs font-bold"
+>
+  Switch Role
+</button>
           {/* Mobile Menu Toggle */}
           <button 
             className="md:hidden p-2 text-slate-300 hover:text-white transition-colors"

@@ -81,6 +81,7 @@ export default function AccountCreation() {
         // clear signupEmail (we used it to prefill) and store pendingEmail for OTP verify
         localStorage.removeItem("signupEmail");
         localStorage.setItem("pendingEmail", payload.email);
+        localStorage.setItem("isNewUser", "true");
         navigate("/otp-verify");
         return;
       }
@@ -89,12 +90,12 @@ export default function AccountCreation() {
       if (data.token) {
         localStorage.setItem("token", data.token);
         localStorage.removeItem("signupEmail");
-        navigate("/onboarding");
+        navigate("/otp-verify");
         return;
       }
 
       // fallback
-      navigate("/onboarding");
+      navigate("/otp-verify");
     } catch (err) {
       console.error("signup error", err);
       setError("Network error — please try again.");

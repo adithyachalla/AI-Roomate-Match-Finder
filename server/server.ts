@@ -12,6 +12,8 @@ import Listing from "./models/Listing.js";
 import authRoutes from "./routes/auth.js";
 import { seedDummyUsers } from "./controllers/authController.js";
 import { transporter } from "./controllers/authController.js"; // optional: test email
+import userRoutes from "./routes/userRoutes.js";
+import profileRoutes from "./routes/ProfileRoutes.js";
 
 // ESM-safe __filename / __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -87,7 +89,8 @@ async function startServer() {
 
   // Mount auth routes (password -> OTP)
   app.use("/api/auth", authRoutes);
-
+  app.use("/api/user", userRoutes);
+  app.use("/api/profile", profileRoutes);
   // Quick test-email endpoint (convenience) — you can call POST /api/auth/test-email
   // NOTE: the router already contains a test-email route if you used the new routes/auth.ts,
   // but keeping this here is safe if you prefer it in server.ts.

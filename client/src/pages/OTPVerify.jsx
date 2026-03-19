@@ -15,7 +15,6 @@ export default function OTPVerify() {
   useEffect(() => {
     const e = localStorage.getItem("pendingEmail");
     if (!e) {
-      // nothing pending: send user back to login
       navigate("/login");
       return;
     }
@@ -33,17 +32,24 @@ export default function OTPVerify() {
   const handleVerify = async (ev) => {
     ev?.preventDefault?.();
     setError("");
+
     if (!otp || otp.trim().length === 0) {
       setError("Please enter the verification code.");
       return;
     }
 
     setLoading(true);
+
     try {
       const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.toLowerCase().trim(), otp: otp.trim() }),
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          otp: otp.trim()
+        })
       });
 
       const data = await res.json().catch(() => ({}));
@@ -55,13 +61,42 @@ export default function OTPVerify() {
         return;
       }
 
-      // success: store token and go to onboarding
+      // ✅ SAVE TOKEN
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
-      // cleanup pendingEmail
+
+      // ✅ SAVE USER DATA (CRITICAL FIX)
+      if (data.user) {
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            _id: data.user._id,
+            username: data.user.username,
+            fullname: data.user.fullname,
+            email: data.user.email
+          })
+        );
+      } else {
+        console.error("User data missing from backend response");
+      }
+
+      // cleanup
       localStorage.removeItem("pendingEmail");
-      navigate("/onboarding");
+
+      const isNewUser = localStorage.getItem("isNewUser");
+      const role = localStorage.getItem("role");
+
+      if (isNewUser === "true") {
+        navigate("/onboarding");
+      } else {
+        if (role === "owner") {
+          navigate("/owner-dashboard");
+        } else {
+          navigate("/student-dashboard");
+        }
+      }
+
     } catch (err) {
       console.error("verify otp error", err);
       setError("Network error — please try again.");
@@ -72,21 +107,28 @@ export default function OTPVerify() {
 
   const handleResend = async () => {
     if (cooldown > 0) return;
+
     setError("");
     setLoading(true);
+
     try {
       const res = await fetch(`${API_BASE}/api/auth/resend-otp`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.toLowerCase().trim() }),
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: email.toLowerCase().trim()
+        })
       });
 
       const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
         setError(data.message || "Failed to resend code");
         return;
       }
-      // start a 30s cooldown (client-side)
+
       setCooldown(30);
     } catch (err) {
       console.error("resend otp error", err);
@@ -114,7 +156,9 @@ export default function OTPVerify() {
             pattern="\d{6}"
           />
 
-          {error && <div className="text-sm text-red-500">{error}</div>}
+          {error && (
+            <div className="text-sm text-red-500">{error}</div>
+          )}
 
           <div className="flex gap-3">
             <button
@@ -138,7 +182,6 @@ export default function OTPVerify() {
           <button
             type="button"
             onClick={() => {
-              // go back to login to re-enter credentials
               localStorage.removeItem("pendingEmail");
               navigate("/login");
             }}

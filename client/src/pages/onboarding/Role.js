@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function Role({ next }) {
+export default function Role({ next, setData }) {
   const [role, setRole] = useState("student");
   const navigate = useNavigate();
 
   const handleContinue = () => {
+    // ✅ SAVE ROLE INTO GLOBAL ONBOARDING STATE
+    setData({ role });
+
     if (role === "owner") {
       navigate("/owner-dashboard");
     } else {
-      next(); // student flow route
+      next(); // continue onboarding
     }
   };
 
@@ -20,7 +23,6 @@ export default function Role({ next }) {
       <div className="mb-10 flex flex-col items-center">
         <div className="flex items-center gap-4 mb-4">
 
-          {/* RoomSync Diamond Logo */}
           <div className="relative w-10 h-10">
             <div className="absolute inset-0 border-[3px] border-white/20 rounded-md rotate-45 -translate-x-1 -translate-y-1"></div>
             <div className="absolute inset-0 border-[3px] border-accent-teal rounded-md rotate-45 translate-x-1 translate-y-1"></div>
@@ -32,7 +34,7 @@ export default function Role({ next }) {
         </div>
 
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
-          Step 3 OF 6: Personalize your experience
+          Step 1 of 4: Select Role
         </div>
       </div>
 
@@ -72,7 +74,7 @@ export default function Role({ next }) {
             </p>
           </button>
 
-          {/* PROPERTY OWNER */}
+          {/* OWNER */}
           <button
             onClick={() => setRole("owner")}
             className={`group flex flex-col items-center text-center p-8 rounded-3xl transition-all duration-300 border ${
