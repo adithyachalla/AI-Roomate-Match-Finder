@@ -26,7 +26,7 @@ router.get("/similar/top/:userId", async (req, res) => {
       .sort((a, b) => (b.compatibilityScore || 0) - (a.compatibilityScore || 0))
       .slice(0, 10)
       .map((profile) => ({
-        ...profile.userId?._doc,
+        ...profile.userId,
         compatibilityScore: profile.compatibilityScore || 0
       }));
 
