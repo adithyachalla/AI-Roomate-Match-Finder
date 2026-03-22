@@ -1,6 +1,9 @@
-import mongoose from "mongoose";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 import Listing from "./models/Listing.js";
+import Profile from "./models/Profile.js";
+import SimilarProfile from "./models/SimilarProfile.js";
+import User from "./models/User.js";
 
 dotenv.config();
 
@@ -91,11 +94,149 @@ const seed = async () => {
     await mongoose.connect(process.env.MONGO_URI as string);
     console.log("Connected to MongoDB");
 
+    // Seed listings
     await Listing.deleteMany({});
     console.log("Cleared existing listings");
 
     await Listing.insertMany(seedListings);
     console.log(`Seeded ${seedListings.length} listings successfully`);
+
+    // Seed sample profiles with similar profiles and compatibility scores
+    const sampleProfiles = [
+      {
+        username: "sarah_miller",
+        email: "sarah@example.com",
+        password: "hashed_password",
+        role: "student",
+      },
+      {
+        username: "alex_chen",
+        email: "alex@example.com",
+        password: "hashed_password",
+        role: "student",
+      },
+      {
+        username: "emma_wilson",
+        email: "emma@example.com",
+        password: "hashed_password",
+        role: "student",
+      },
+      {
+        username: "liam_obrien",
+        email: "liam@example.com",
+        password: "hashed_password",
+        role: "student",
+      },
+      {
+        username: "mike_johnson",
+        email: "mike@example.com",
+        password: "hashed_password",
+        role: "student",
+      },
+      {
+        username: "olivia_brown",
+        email: "olivia@example.com",
+        password: "hashed_password",
+        role: "student",
+      },
+      {
+        username: "noah_davis",
+        email: "noah@example.com",
+        password: "hashed_password",
+        role: "student",
+      },
+      {
+        username: "sophia_taylor",
+        email: "sophia@example.com",
+        password: "hashed_password",
+        role: "student",
+      },
+      {
+        username: "ethan_martin",
+        email: "ethan@example.com",
+        password: "hashed_password",
+        role: "student",
+      },
+      {
+        username: "ava_anderson",
+        email: "ava@example.com",
+        password: "hashed_password",
+        role: "student",
+      },
+      {
+        username: "james_thomas",
+        email: "james@example.com",
+        password: "hashed_password",
+        role: "student",
+      },
+      {
+        username: "isabella_jackson",
+        email: "isabella@example.com",
+        password: "hashed_password",
+        role: "student",
+      },
+    ];
+
+    // Clear existing users and profiles
+    await User.deleteMany({ email: { $in: sampleProfiles.map(p => p.email) } });
+    await Profile.deleteMany({ username: { $in: sampleProfiles.map(p => p.username) } });
+    await SimilarProfile.deleteMany({});
+
+    // Create sample users
+    const createdUsers = await User.insertMany(sampleProfiles);
+    console.log(`Seeded ${createdUsers.length} users successfully`);
+
+    // Create corresponding profiles
+    const profileData = createdUsers.map((user, index) => ({
+      userId: user._id,
+      username: user.username,
+      fullname: ["Sarah Miller", "Alex Chen", "Emma Wilson", "Liam O'Brien", "Mike Johnson", "Olivia Brown", "Noah Davis", "Sophia Taylor", "Ethan Martin", "Ava Anderson", "James Thomas", "Isabella Jackson"][index],
+      bio: [
+        "Graduate student at USC. Quiet, focus-oriented, and loves coffee.",
+        "Engineering major. Loves gaming and cooking. Looking for someone social.",
+        "Business student. Early riser, loves the gym.",
+        "Computer Science major. Night owl, loves music.",
+        "Pre-med student. Clean and organized.",
+        "Art student. Social butterfly, loves hosting.",
+        "Law student. Quiet, dedicated to studies.",
+        "Marketing student. Love collaborating on projects.",
+        "Math major. Introverted, very clean.",
+        "Chemistry student. Extroverted, loves parties.",
+        "Physics student. Calm and thoughtful.",
+        "Biology student. Active and outdoorsy."
+      ][index],
+      profilePic: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`,
+      lifestyle: {
+        sleep: ["early", "late", "early", "late", "early", "late", "early", "late", "early", "late", "early", "late"][index],
+        social: ["quiet", "social", "moderate", "social", "quiet", "very social", "quiet", "moderate", "quiet", "very social", "quiet", "moderate"][index],
+        cleanliness: [9 - (index % 3), 6 + (index % 4), 8, 5, 9, 7, 8, 6, 9, 7, 8, 6][index]
+      },
+      livingPreferences: {
+        budget: 1000 + index * 100,
+        neighborhoods: ["Downtown", "Midtown", "Uptown"],
+        moveIn: "2024-08-01",
+        entireUnit: index % 2 === 0
+      }
+    }));
+
+    const createdProfiles = await Profile.insertMany(profileData);
+    console.log(`Seeded ${createdProfiles.length} profiles successfully`);
+
+    // Create similar profiles for first user (so we can see matches)
+    if (createdUsers.length > 1) {
+      const firstUserId = createdUsers[0]._id;
+      const similarProfilesData = {
+        userId: firstUserId,
+        similarProfiles: createdUsers.slice(1, 11).map((user, index) => ({
+          userId: user._id,
+          username: user.username,
+          compatibilityScore: 95 - index * 5 // Descending compatibility scores from 95 to 50
+        }))
+      };
+
+      await SimilarProfile.create(similarProfilesData);
+      console.log("Seeded similar profiles with compatibility scores");
+    }
 
     await mongoose.disconnect();
     console.log("Done");

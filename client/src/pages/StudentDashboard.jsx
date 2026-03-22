@@ -1,9 +1,23 @@
-import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { StudentMessagesTab } from "./components/StudentMessagesTab";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(undefined);
+  const [topProfiles, setTopProfiles] = useState([]);
+  const [loadingProfiles, setLoadingProfiles] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  // Check if coming from roommate detail with state
+  useEffect(() => {
+    if (location.state?.roommateId && location.state?.roommateName) {
+      setActiveTab("conversations");
+      // Clear the state after using it
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // ✅ FIXED useEffect
   useEffect(() => {
@@ -18,6 +32,17 @@ export default function StudentDashboard() {
       .then(res => (res.ok ? res.json() : {}))
       .then(data => setUser(data || {}))
       .catch(() => setUser({}));
+
+    // Fetch top 10 similar profiles
+    setLoadingProfiles(true);
+    fetch(`http://localhost:5001/api/profile/similar/top/${stored._id}`)
+      .then(res => (res.ok ? res.json() : []))
+      .then(data => setTopProfiles(Array.isArray(data) ? data : []))
+      .catch(err => {
+        console.error("Error fetching similar profiles:", err);
+        setTopProfiles([]);
+      })
+      .finally(() => setLoadingProfiles(false));
   }, []);
 
   const logout = () => {
@@ -114,11 +139,17 @@ export default function StudentDashboard() {
   {/* NAV */}
   <div className="space-y-3 text-sm">
 
-    <button className="w-full text-left px-3 py-2 rounded-lg bg-primary/10 text-primary font-bold">
+    <button 
+      onClick={() => setActiveTab("dashboard")}
+      className={`w-full text-left px-3 py-2 rounded-lg transition ${activeTab === "dashboard" ? "bg-primary/10 text-primary font-bold" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
+    >
       Top Matches
     </button>
 
-    <button className="w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition">
+    <button 
+      onClick={() => navigate("/browse-roommates")}
+      className="w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition"
+    >
       Browse Roommates
     </button>
 
@@ -126,7 +157,10 @@ export default function StudentDashboard() {
       Saved Profiles
     </button>
 
-    <button className="w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition">
+    <button 
+      onClick={() => setActiveTab("conversations")}
+      className={`w-full text-left px-3 py-2 rounded-lg transition ${activeTab === "conversations" ? "bg-primary/10 text-primary font-bold" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
+    >
       Conversations
     </button>
 
@@ -195,6 +229,8 @@ export default function StudentDashboard() {
       {/* MAIN */}
       <main className="flex-1 p-8 overflow-y-auto">
 
+        {activeTab === "dashboard" && (
+          <>
         {isEmptyProfile && (
           <div className="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded mb-6">
             Your profile is incomplete. Complete it to get better matches.
@@ -281,45 +317,85 @@ export default function StudentDashboard() {
           Highly Compatible
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {loadingProfiles && (
+          <div className="text-slate-400 text-center py-8">
+            Loading top matches...
+          </div>
+        )}
 
-{[1,2,3].map((i) => (
-  <div
-    key={i}
-    className="bg-card-dark rounded-xl border border-white/10 p-4 hover:scale-[1.03] transition shadow-lg"
-  >
-    {/* 🔥 Avatar + Gradient */}
-    <div className="h-40 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-indigo-500/30 via-purple-500/20 to-blue-500/30">
-      <img
-        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=match${i}`}
-        alt="match"
-        className="w-20 h-20 rounded-full bg-white"
-      />
-    </div>
+        {!loadingProfiles && topProfiles.length === 0 && (
+          <div className="bg-slate-800/50 border border-white/10 p-6 rounded-lg text-center">
+            <p className="text-slate-400 mb-2">No similar profiles found yet</p>
+            <p className="text-xs text-slate-500">Complete your profile to get better matches!</p>
+          </div>
+        )}
 
-    {/* Name */}
-    <h3 className="font-bold text-lg mb-1">
-      Match {i}
-    </h3>
+        {!loadingProfiles && topProfiles.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {topProfiles.map((profile, index) => (
+              <div
+                key={profile._id || index}
+                className="bg-card-dark rounded-xl border border-white/10 p-4 hover:scale-[1.03] transition shadow-lg hover:border-primary/40 cursor-pointer"
+                onClick={() => navigate(`/roommate/${profile._id}`, { state: { roommateId: profile._id, roommateName: profile.fullname } })}
+              >
+                {/* Avatar + Gradient */}
+                <div className="h-40 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-indigo-500/30 via-purple-500/20 to-blue-500/30 overflow-hidden">
+                  <img
+                    src={profile.profilePic || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`}
+                    alt={profile.fullname}
+                    className="w-20 h-20 rounded-full bg-white object-cover"
+                  />
+                </div>
 
-    {/* Description */}
-    <p className="text-sm text-slate-400 mb-3">
-      Compatible roommate profile
-    </p>
+                {/* Name */}
+                <h3 className="font-bold text-lg mb-1 text-white">
+                  {profile.fullname || "User"}
+                </h3>
 
-    {/* Compatibility badge */}
-    <div className="text-xs text-green-400 mb-3 font-semibold">
-      ⭐ {90 - i * 2}% Match
-    </div>
+                {/* Username */}
+                <p className="text-xs text-slate-500 mb-2">
+                  @{profile.username || "user"}
+                </p>
 
-    {/* Button */}
-    <button className="w-full bg-primary py-2 rounded-lg font-bold hover:opacity-90">
-      View Profile
-    </button>
-  </div>
-))}
+                {/* Bio */}
+                <p className="text-sm text-slate-400 mb-3 line-clamp-2 min-h-[2.5rem]">
+                  {profile.bio || "No bio added"}
+                </p>
 
-        </div>
+                {/* Compatibility badge */}
+                <div className="text-sm text-green-400 mb-3 font-semibold bg-green-400/10 px-3 py-1 rounded-full inline-block">
+                  ⭐ {profile.compatibilityScore || 0}% Match
+                </div>
+
+                {/* Quick stats grid */}
+                <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
+                  <div className="bg-white/5 p-2 rounded-lg border border-white/10">
+                    <p className="text-slate-500">Budget</p>
+                    <p className="font-bold text-white">${profile.livingPreferences?.budget || "N/A"}</p>
+                  </div>
+                  <div className="bg-white/5 p-2 rounded-lg border border-white/10">
+                    <p className="text-slate-500">Sleep</p>
+                    <p className="font-bold text-white capitalize">{profile.lifestyle?.sleep || "N/A"}</p>
+                  </div>
+                </div>
+
+                {/* Button */}
+                <button 
+                  className="w-full bg-primary py-2 rounded-lg font-bold hover:opacity-90 transition text-white"
+                  onClick={() => navigate(`/roommate/${profile._id}`, { state: { roommateId: profile._id, roommateName: profile.fullname } })}
+                >
+                  View Profile
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+          </>
+        )}
+
+        {activeTab === "conversations" && (
+          <StudentMessagesTab />
+        )}
 
       </main>
     </div>
