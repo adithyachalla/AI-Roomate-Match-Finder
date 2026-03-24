@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import Listing from "./models/Listing.js";
+import { Message } from "./models/Message.js";
 import Profile from "./models/Profile.js";
 import SimilarProfile from "./models/SimilarProfile.js";
 import User from "./models/User.js";
@@ -94,93 +95,183 @@ const seed = async () => {
     await mongoose.connect(process.env.MONGO_URI as string);
     console.log("Connected to MongoDB");
 
-    // Seed listings
+    // Listing owners to create users for
+    const listingOwnerUsers = [
+      {
+        username: "alex_johnson",
+        email: "alex.johnson@example.com",
+        fullname: "Alex Johnson",
+        passwordHash: "hashed_password",
+      },
+      {
+        username: "david_kim",
+        email: "david.kim@example.com",
+        fullname: "David Kim",
+        passwordHash: "hashed_password",
+      },
+    ];
+
+    // Find or create listing owner users
+    const listingOwnerEmails = listingOwnerUsers.map(u => u.email);
+    const existingListingOwners = await User.find({ email: { $in: listingOwnerEmails } });
+    const existingEmails = new Set(existingListingOwners.map(u => u.email));
+    
+    const newListingOwners = listingOwnerUsers.filter(u => !existingEmails.has(u.email));
+    let createdListingOwnerUsers = existingListingOwners;
+    
+    if (newListingOwners.length > 0) {
+      const insertedUsers = await User.insertMany(newListingOwners);
+      createdListingOwnerUsers = [...existingListingOwners, ...insertedUsers];
+    }
+    
+    // Create profiles for listing owners if they don't exist
+    const existingListingOwnerProfiles = await Profile.find({ userId: { $in: createdListingOwnerUsers.map(u => u._id) } });
+    const existingProfileUserIds = new Set(existingListingOwnerProfiles.map(p => p.userId.toString()));
+    
+    const missingListingOwnerProfiles = createdListingOwnerUsers
+      .filter(u => !existingProfileUserIds.has(u._id.toString()))
+      .map((user, index) => ({
+        userId: user._id,
+        username: user.username,
+        fullname: user.fullname,
+        bio: index === 0 
+          ? "Real estate enthusiast. Well-maintained properties at great locations."
+          : "Property manager. Looking for reliable tenants.",
+        profilePic: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`,
+        lifestyle: {
+          sleep: "early",
+          social: "moderate",
+          cleanliness: 8
+        },
+        livingPreferences: {
+          budget: 2000,
+          neighborhoods: ["Downtown", "Midtown"],
+          moveIn: "2024-08-01",
+          entireUnit: true
+        }
+      }));
+
+    if (missingListingOwnerProfiles.length > 0) {
+      await Profile.insertMany(missingListingOwnerProfiles);
+    }
+
+    // Seed listings with ownerId references
     await Listing.deleteMany({});
     console.log("Cleared existing listings");
 
-    await Listing.insertMany(seedListings);
-    console.log(`Seeded ${seedListings.length} listings successfully`);
+    const ownerMap = {};
+    createdListingOwnerUsers.forEach(user => {
+      if (user.fullname === "Alex Johnson") ownerMap["Alex Johnson"] = user._id;
+      if (user.fullname === "Sarah Miller") ownerMap["Sarah Miller"] = user._id;
+      if (user.fullname === "David Kim") ownerMap["David Kim"] = user._id;
+    });
+
+    // Add ownerId to listings
+    const listingsWithOwners = seedListings.map(listing => ({
+      ...listing,
+      ownerId: ownerMap[listing.owner.name]
+    }));
+
+    await Listing.insertMany(listingsWithOwners);
+    console.log(`Seeded ${listingsWithOwners.length} listings successfully`);
 
     // Seed sample profiles with similar profiles and compatibility scores
     const sampleProfiles = [
       {
         username: "sarah_miller",
         email: "sarah@example.com",
-        password: "hashed_password",
-        role: "student",
+        fullname: "Sarah Miller",
+        passwordHash: "hashed_password",
       },
       {
         username: "alex_chen",
         email: "alex@example.com",
-        password: "hashed_password",
-        role: "student",
+        fullname: "Alex Chen",
+        passwordHash: "hashed_password",
       },
       {
         username: "emma_wilson",
         email: "emma@example.com",
-        password: "hashed_password",
-        role: "student",
+        fullname: "Emma Wilson",
+        passwordHash: "hashed_password",
       },
       {
         username: "liam_obrien",
         email: "liam@example.com",
-        password: "hashed_password",
-        role: "student",
+        fullname: "Liam O'Brien",
+        passwordHash: "hashed_password",
       },
       {
         username: "mike_johnson",
         email: "mike@example.com",
-        password: "hashed_password",
-        role: "student",
+        fullname: "Mike Johnson",
+        passwordHash: "hashed_password",
       },
       {
         username: "olivia_brown",
         email: "olivia@example.com",
-        password: "hashed_password",
-        role: "student",
+        fullname: "Olivia Brown",
+        passwordHash: "hashed_password",
       },
       {
         username: "noah_davis",
         email: "noah@example.com",
-        password: "hashed_password",
-        role: "student",
+        fullname: "Noah Davis",
+        passwordHash: "hashed_password",
       },
       {
         username: "sophia_taylor",
         email: "sophia@example.com",
-        password: "hashed_password",
-        role: "student",
+        fullname: "Sophia Taylor",
+        passwordHash: "hashed_password",
       },
       {
         username: "ethan_martin",
         email: "ethan@example.com",
-        password: "hashed_password",
-        role: "student",
+        fullname: "Ethan Martin",
+        passwordHash: "hashed_password",
       },
       {
         username: "ava_anderson",
         email: "ava@example.com",
-        password: "hashed_password",
-        role: "student",
+        fullname: "Ava Anderson",
+        passwordHash: "hashed_password",
       },
       {
         username: "james_thomas",
         email: "james@example.com",
-        password: "hashed_password",
-        role: "student",
+        fullname: "James Thomas",
+        passwordHash: "hashed_password",
       },
       {
         username: "isabella_jackson",
         email: "isabella@example.com",
-        password: "hashed_password",
-        role: "student",
+        fullname: "Isabella Jackson",
+        passwordHash: "hashed_password",
       },
     ];
 
-    // Clear existing users and profiles
-    await User.deleteMany({ email: { $in: sampleProfiles.map(p => p.email) } });
+    // Clear existing test users and ALL related data
+    const testEmails = sampleProfiles.map(p => p.email);
+    const oldTestUsers = await User.find({ email: { $in: testEmails } });
+    const oldTestUserIds = oldTestUsers.map(u => u._id);
+
+    // Delete old test users
+    await User.deleteMany({ email: { $in: testEmails } });
+    
+    // Delete profiles for old test users
     await Profile.deleteMany({ username: { $in: sampleProfiles.map(p => p.username) } });
-    await SimilarProfile.deleteMany({});
+    
+    // Delete messages between old test users
+    await Message.deleteMany({
+      $or: [
+        { senderId: { $in: oldTestUserIds } },
+        { recipientId: { $in: oldTestUserIds } }
+      ]
+    });
+    
+    // Delete similar profiles for old test users
+    await SimilarProfile.deleteMany({ userId: { $in: oldTestUserIds } });
 
     // Create sample users
     const createdUsers = await User.insertMany(sampleProfiles);
@@ -222,20 +313,31 @@ const seed = async () => {
     const createdProfiles = await Profile.insertMany(profileData);
     console.log(`Seeded ${createdProfiles.length} profiles successfully`);
 
-    // Create similar profiles for first user (so we can see matches)
-    if (createdUsers.length > 1) {
-      const firstUserId = createdUsers[0]._id;
-      const similarProfilesData = {
-        userId: firstUserId,
-        similarProfiles: createdUsers.slice(1, 11).map((user, index) => ({
+    // Create similar profiles for ALL users (seeded + custom users)
+    const allUsers = await User.find();
+    
+    if (allUsers.length > 1) {
+      const similarProfilesDataArray = allUsers.map((user) => {
+        // Get all other users (exclude current user)
+        const otherUsers = allUsers.filter(otherUser => otherUser._id.toString() !== user._id.toString());
+        
+        // Filter out any users without username
+        const validOtherUsers = otherUsers.filter(u => u.username && u.username.trim() !== '');
+        
+        return {
           userId: user._id,
-          username: user.username,
-          compatibilityScore: 95 - index * 5 // Descending compatibility scores from 95 to 50
-        }))
-      };
+          similarProfiles: validOtherUsers.slice(0, 10).map((otherUser) => ({
+            userId: otherUser._id,
+            username: otherUser.username,
+            compatibilityScore: 85 + Math.floor(Math.random() * 15) // Random 85-100
+          }))
+        };
+      });
 
-      await SimilarProfile.create(similarProfilesData);
-      console.log("Seeded similar profiles with compatibility scores");
+      // Delete old similar profiles and create new ones
+      await SimilarProfile.deleteMany({});
+      await SimilarProfile.insertMany(similarProfilesDataArray);
+      console.log("Seeded similar profiles for ALL users (seeded + custom) with compatibility scores");
     }
 
     await mongoose.disconnect();

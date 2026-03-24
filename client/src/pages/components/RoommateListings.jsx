@@ -214,11 +214,11 @@ const RoommateListings = ({ onViewDetail }) => {
               </button>
               {showSleepMenu && (
                 <div className="absolute top-full mt-2 left-0 w-48 bg-[#1c2127] border border-[#283039] rounded-xl shadow-2xl z-[60] p-2">
-                  {["Early Bird", "Night Owl", "Flexible"].map(option => (
+                  {["early", "late"].map(option => (
                     <button 
                       key={option}
                       onClick={() => { setSleepFilter(option); setShowSleepMenu(false); }}
-                      className="w-full text-left px-4 py-2 hover:bg-slate-800 rounded-lg text-sm"
+                      className="w-full text-left px-4 py-2 hover:bg-slate-800 rounded-lg text-sm capitalize"
                     >
                       {option}
                     </button>
@@ -250,11 +250,11 @@ const RoommateListings = ({ onViewDetail }) => {
               </button>
               {showSocialMenu && (
                 <div className="absolute top-full mt-2 left-0 w-48 bg-[#1c2127] border border-[#283039] rounded-xl shadow-2xl z-[60] p-2">
-                  {["Introvert", "Extrovert", "Ambivert"].map(option => (
+                  {["quiet", "moderate", "social", "very social"].map(option => (
                     <button 
                       key={option}
                       onClick={() => { setSocialFilter(option); setShowSocialMenu(false); }}
-                      className="w-full text-left px-4 py-2 hover:bg-slate-800 rounded-lg text-sm"
+                      className="w-full text-left px-4 py-2 hover:bg-slate-800 rounded-lg text-sm capitalize"
                     >
                       {option}
                     </button>

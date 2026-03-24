@@ -1,17 +1,19 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import Header from "./components/Header";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 import ApartmentListings from "./components/ApartmentListings";
-import PostProperty from "./components/PostProperty";
+import Header from "./components/Header";
 import ListerDashboard from "./components/ListerDashboard";
-import RoommateFinder from "./components/RoomateFinder";
+import PostProperty from "./components/PostProperty";
 import PropertyDetail from "./components/PropertyDetail";
+import RoommateFinder from "./components/RoomateFinder";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("apartments");
   const [dashboardSubTab, setDashboardSubTab] = useState("overview");
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
   const [previousTab, setPreviousTab] = useState("apartments");
+  const [selectedOwnerId, setSelectedOwnerId] = useState(null);
+  const [selectedOwnerName, setSelectedOwnerName] = useState(null);
 
   const handleTabChange = (tab) => {
     if (tab === "dashboard") {
@@ -31,12 +33,12 @@ export default function App() {
     setActiveTab("property-detail");
   };
 
-  const messageOwner = (ownerName) => {
-    // Navigate to dashboard messages and select the owner
+  const messageOwner = (ownerId, ownerName) => {
+    // Store the owner details and navigate to messages
+    setSelectedOwnerId(ownerId);
+    setSelectedOwnerName(ownerName);
     setDashboardSubTab("messages");
     setActiveTab("dashboard");
-    // We'll need to pass the owner name to the dashboard, 
-    // but for now, this triggers the tab change.
   };
 
   return (
@@ -56,7 +58,7 @@ export default function App() {
           >
             {activeTab === "apartments" && <ApartmentListings onViewDetail={viewPropertyDetail} />}
             {activeTab === "post-property" && <PostProperty setActiveTab={setActiveTab} navigateToDashboard={navigateToDashboard} />}
-            {activeTab === "dashboard" && <ListerDashboard setActiveTab={setActiveTab} initialSubTab={dashboardSubTab} onViewDetail={viewPropertyDetail} />}
+            {activeTab === "dashboard" && <ListerDashboard setActiveTab={setActiveTab} initialSubTab={dashboardSubTab} onViewDetail={viewPropertyDetail} selectedOwnerId={selectedOwnerId} selectedOwnerName={selectedOwnerName} />}
             {activeTab === "roommates" && <RoommateFinder />}
             {activeTab === "property-detail" && (
               <PropertyDetail 
@@ -78,8 +80,8 @@ export default function App() {
           <span className="hidden md:inline">v2.4.1 RoomSync Core</span>
         </div>
         <div className="flex items-center gap-4">
-          <a className="hover:text-primary transition-colors" href="#">Documentation</a>
-          <a className="hover:text-primary transition-colors" href="#">Support</a>
+          <button className="hover:text-primary transition-colors" type="button">Documentation</button>
+          <button className="hover:text-primary transition-colors" type="button">Support</button>
         </div>
       </footer>
     </div>

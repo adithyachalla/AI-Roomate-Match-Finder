@@ -58,6 +58,11 @@ router.get("/user/:userId", async (req, res) => {
     const conversations = {};
 
     messages.forEach((msg) => {
+      // Skip if either sender or recipient is null (deleted user)
+      if (!msg.senderId || !msg.recipientId) {
+        return;
+      }
+
       const partnerId =
         msg.senderId._id.toString() === userId
           ? msg.recipientId._id.toString()

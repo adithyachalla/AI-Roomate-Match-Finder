@@ -3,23 +3,17 @@ import { useEffect, useState } from "react";
 import EditListing from "./EditListing";
 import { ListerMessagesTab } from "./ListerMessagesTab";
 
-const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetail }) => {
+const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetail, selectedOwnerId, selectedOwnerName }) => {
   const [listings, setListings] = useState([]);
   const [roommates, setRoommates] = useState([]);
-  const [messages, setMessages] = useState([]);
   const [tenantMatches, setTenantMatches] = useState([]);
   const [subTab, setSubTab] = useState(initialSubTab);
   const [selectedConversation, setSelectedConversation] = useState(null);
-  const [newMessageText, setNewMessageText] = useState("");
   const [editingListingId, setEditingListingId] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const fetchListings = () => {
     fetch("http://localhost:5001/api/apartments").then(res => res.json()).then(setListings);
-  };
-
-  const fetchMessages = () => {
-    fetch("http://localhost:5001/api/messages").then(res => res.json()).then(setMessages);
   };
 
   useEffect(() => {
@@ -29,36 +23,12 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
   useEffect(() => {
     fetchListings();
     fetch("http://localhost:5001/api/roommates").then(res => res.json()).then(setRoommates);
-    fetchMessages();
     fetch("http://localhost:5001/api/tenant-matches").then(res => res.json()).then(setTenantMatches);
   }, []);
 
   const handleSubTabChange = (tab) => {
     setSubTab(tab);
     setIsSidebarOpen(false);
-  };
-
-  const handleSendMessage = async () => {
-    if (!newMessageText.trim() || !selectedConversation) return;
-
-    try {
-      const response = await fetch("http://localhost:5001/api/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipient: selectedConversation,
-          text: newMessageText,
-          sender: "Alex Johnson"
-        })
-      });
-
-      if (response.ok) {
-        setNewMessageText("");
-        fetchMessages();
-      }
-    } catch (err) {
-      console.error("Failed to send message:", err);
-    }
   };
 
   const stats = [
@@ -375,7 +345,7 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
           )}
 
           {subTab === "messages" && (
-            <ListerMessagesTab />
+            <ListerMessagesTab selectedOwnerId={selectedOwnerId} selectedOwnerName={selectedOwnerName} />
           )}
 
           {subTab === "analytics" && (

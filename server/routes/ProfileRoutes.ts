@@ -11,24 +11,30 @@ router.get("/similar/top/:userId", async (req, res) => {
   try {
     const similarProfilesRecord = await SimilarProfile.findOne({
       userId: req.params.userId
-    }).populate({
-      path: "similarProfiles.userId",
-      model: "Profile",
-      select: "userId username fullname bio profilePic lifestyle livingPreferences"
     });
 
-    if (!similarProfilesRecord || !similarProfilesRecord.similarProfiles) {
+    if (!similarProfilesRecord || !similarProfilesRecord.similarProfiles || similarProfilesRecord.similarProfiles.length === 0) {
       return res.json([]);
     }
 
-    // Sort by compatibility score in descending order and take top 10
+    // Get the userIds from similar profiles
+    const userIds = similarProfilesRecord.similarProfiles.map(p => p.userId);
+
+    // Fetch full profile documents for these userIds
+    const profiles = await Profile.find({ userId: { $in: userIds } });
+
+    // Combine profiles with compatibility scores
     const topProfiles = similarProfilesRecord.similarProfiles
+      .map(similarItem => {
+        const profileDoc = profiles.find(p => p.userId.toString() === similarItem.userId.toString());
+        return profileDoc ? {
+          ...profileDoc.toObject(),
+          compatibilityScore: similarItem.compatibilityScore || 0
+        } : null;
+      })
+      .filter(p => p !== null)
       .sort((a, b) => (b.compatibilityScore || 0) - (a.compatibilityScore || 0))
-      .slice(0, 10)
-      .map((profile) => ({
-        ...profile.userId,
-        compatibilityScore: profile.compatibilityScore || 0
-      }));
+      .slice(0, 10);
 
     res.json(topProfiles);
 

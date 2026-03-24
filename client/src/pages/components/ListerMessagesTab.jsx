@@ -1,7 +1,7 @@
 import { MessageSquare, Search, Send, Settings, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-export const ListerMessagesTab = () => {
+export const ListerMessagesTab = ({ selectedOwnerId, selectedOwnerName }) => {
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -21,18 +21,13 @@ export const ListerMessagesTab = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Load conversations on mount
-  useEffect(() => {
-    if (currentUser?._id) {
-      loadConversations();
-    }
-  }, [currentUser?._id]);
+  const currentUserId = currentUser?._id;
 
   // Load conversations
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       const response = await fetch(
-        `http://localhost:5001/api/messages/user/${currentUser._id}`
+        `http://localhost:5001/api/messages/user/${currentUserId}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -41,18 +36,50 @@ export const ListerMessagesTab = () => {
     } catch (err) {
       console.error("Error loading conversations:", err);
     }
-  };
+  }, [currentUserId]);
+
+  // Mark conversation as read
+  const markConversationAsRead = useCallback(async (conversationId) => {
+    try {
+      await fetch(
+        `http://localhost:5001/api/messages/conversation/${conversationId}/read`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: currentUserId })
+        }
+      );
+    } catch (err) {
+      console.error("Error marking as read:", err);
+    }
+  }, [currentUserId]);
+
+  // Load conversations on mount
+  useEffect(() => {
+    if (currentUserId) {
+      loadConversations();
+    }
+  }, [currentUserId, loadConversations]);
+
+  // When selectedOwnerId is provided, find or create conversation with that owner
+  useEffect(() => {
+    if (selectedOwnerId && selectedOwnerName) {
+      // Create a new conversation object for this owner with proper structure
+      setSelectedConversation({
+        senderId: currentUser._id,
+        recipientId: selectedOwnerId,
+        conversationId: [currentUser._id, selectedOwnerId].sort().join('_'),
+        lastMessage: `Chat with ${selectedOwnerName}`,
+        partnerInfo: {
+          _id: selectedOwnerId,
+          fullname: selectedOwnerName
+        }
+      });
+    }
+  }, [selectedOwnerId, selectedOwnerName, currentUser._id]);
 
   // Load messages for selected conversation
-  useEffect(() => {
-    if (selectedConversation?.conversationId) {
-      loadMessages(selectedConversation.conversationId);
-      // Mark messages as read
-      markConversationAsRead(selectedConversation.conversationId);
-    }
-  }, [selectedConversation?.conversationId]);
-
-  const loadMessages = async (conversationId) => {
+  const loadMessages = useCallback(async (conversationId) => {
     try {
       setLoading(true);
       const response = await fetch(
@@ -67,33 +94,27 @@ export const ListerMessagesTab = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const markConversationAsRead = async (conversationId) => {
-    try {
-      await fetch(
-        `http://localhost:5001/api/messages/conversation/${conversationId}/read`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: currentUser._id })
-        }
-      );
-    } catch (err) {
-      console.error("Error marking as read:", err);
+  useEffect(() => {
+    if (selectedConversation?.conversationId) {
+      loadMessages(selectedConversation.conversationId);
+      markConversationAsRead(selectedConversation.conversationId);
     }
-  };
+  }, [selectedConversation?.conversationId, loadMessages, markConversationAsRead]);
 
   const handleSendMessage = async () => {
     if (!newMessageText.trim() || !selectedConversation) return;
 
     try {
+      const recipientId = selectedConversation.partnerInfo?._id || selectedConversation.recipientId;
+      
       const response = await fetch("http://localhost:5001/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           senderId: currentUser._id,
-          recipientId: selectedConversation.partnerInfo._id,
+          recipientId: recipientId,
           text: newMessageText
         })
       });

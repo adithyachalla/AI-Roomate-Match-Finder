@@ -336,7 +336,7 @@ export default function StudentDashboard() {
               <div
                 key={profile._id || index}
                 className="bg-card-dark rounded-xl border border-white/10 p-4 hover:scale-[1.03] transition shadow-lg hover:border-primary/40 cursor-pointer"
-                onClick={() => navigate(`/roommate/${profile._id}`, { state: { roommateId: profile._id, roommateName: profile.fullname } })}
+                onClick={() => navigate(`/roommate/${profile.userId}`, { state: { roommateId: profile.userId, roommateName: profile.fullname } })}
               >
                 {/* Avatar + Gradient */}
                 <div className="h-40 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-indigo-500/30 via-purple-500/20 to-blue-500/30 overflow-hidden">
@@ -382,7 +382,7 @@ export default function StudentDashboard() {
                 {/* Button */}
                 <button 
                   className="w-full bg-primary py-2 rounded-lg font-bold hover:opacity-90 transition text-white"
-                  onClick={() => navigate(`/roommate/${profile._id}`, { state: { roommateId: profile._id, roommateName: profile.fullname } })}
+                  onClick={() => navigate(`/roommate/${profile.userId}`, { state: { roommateId: profile.userId, roommateName: profile.fullname } })}
                 >
                   View Profile
                 </button>
