@@ -1,19 +1,19 @@
 // server.ts — top of file (replace the existing top with this block)
 import "./config/loadEnv.js"; // load .env before any other modules
 
+import cors from "cors";
 import express from "express";
-import { createServer as createViteServer } from "vite";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import fs from "fs";
-import cors from "cors";
+import { createServer as createViteServer } from "vite";
 import connectDB from "./config/db.js";
+import { seedDummyUsers, transporter } from "./controllers/authController.js";
 import Listing from "./models/Listing.js";
-import authRoutes from "./routes/auth.js";
-import { seedDummyUsers } from "./controllers/authController.js";
-import { transporter } from "./controllers/authController.js"; // optional: test email
-import userRoutes from "./routes/userRoutes.js";
 import profileRoutes from "./routes/ProfileRoutes.js";
+import authRoutes from "./routes/auth.js";
+import messagesRoutes from "./routes/messages.js";
+import userRoutes from "./routes/userRoutes.js";
 
 // ESM-safe __filename / __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -91,6 +91,7 @@ async function startServer() {
   app.use("/api/auth", authRoutes);
   app.use("/api/user", userRoutes);
   app.use("/api/profile", profileRoutes);
+  app.use("/api/messages", messagesRoutes);
   // Quick test-email endpoint (convenience) — you can call POST /api/auth/test-email
   // NOTE: the router already contains a test-email route if you used the new routes/auth.ts,
   // but keeping this here is safe if you prefer it in server.ts.
@@ -196,26 +197,6 @@ async function startServer() {
   app.get("/api/leads", (req, res) => {
     const data = getData();
     res.json(data.leads);
-  });
-
-  app.get("/api/messages", (req, res) => {
-    const data = getData();
-    res.json(data.messages);
-  });
-
-  app.post("/api/messages", (req, res) => {
-    const data = getData();
-    const newMessage = {
-      id: Date.now(),
-      sender: req.body.sender || "Alex Johnson",
-      recipient: req.body.recipient,
-      text: req.body.text,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      unread: false
-    };
-    data.messages.push(newMessage);
-    saveData(data);
-    res.json(newMessage);
   });
 
   app.get("/api/tenant-matches", (req, res) => {

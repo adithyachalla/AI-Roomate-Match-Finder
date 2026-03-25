@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { ArrowLeft, Bed, Bath, Navigation, Sparkles, MessageSquare, Heart, Share2, ShieldCheck, MapPin, Users, ChevronLeft, ChevronRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, Bath, Bed, ChevronLeft, ChevronRight, Heart, MapPin, MessageSquare, Navigation, Share2, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getApartmentSummary } from "../../services/utility";
 
-const PropertyDetail = ({ propertyId, onBack, onMessageOwner }) => {
+const PropertyDetail = ({ propertyId, onBack, onMessageOwner, dashboardType = "student" }) => {
+  const navigate = useNavigate();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [aiSummary, setAiSummary] = useState("");
@@ -307,7 +309,17 @@ const PropertyDetail = ({ propertyId, onBack, onMessageOwner }) => {
               Alex has been a verified lister on RoomSync since 2023 and has successfully matched 15+ students with their perfect homes.
             </p>
             <button 
-              onClick={() => onMessageOwner(property.owner?.name || "Alex Johnson")}
+              onClick={() => {
+                const redirectPath = dashboardType === "owner" ? "/owner-dashboard" : "/student-dashboard";
+                navigate(redirectPath, { 
+                  state: { 
+                    ownerId: property.ownerId, 
+                    ownerName: property.owner?.name || "Property Owner",
+                    propertyTitle: property.title,
+                    openConversation: true
+                  } 
+                });
+              }}
               className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all"
             >
               <MessageSquare size={20} /> Message Owner

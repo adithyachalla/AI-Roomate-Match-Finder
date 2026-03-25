@@ -1,11 +1,13 @@
 // server/controllers/authController.ts
-import { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
-import User from "../models/User.js";
 import Otp from "../models/Otp.js";
+import Profile from "../models/Profile.js";
+import SimilarProfile from "../models/SimilarProfile.js";
+import User from "../models/User.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "change_this_secret";
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS || "10", 10);
@@ -202,6 +204,49 @@ export async function signup(req: Request, res: Response) {
       username: username || "",
       passwordHash
     });
+
+    // Auto-create profile for new user
+    try {
+      await Profile.create({
+        userId: newUser._id,
+        username: username || "",
+        fullname: fullname || "",
+        bio: "",
+        profilePic: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+        lifestyle: {
+          sleep: "",
+          social: "",
+          cleanliness: 0
+        },
+        livingPreferences: {
+          budget: 0,
+          neighborhoods: [],
+          moveIn: "",
+          entireUnit: true
+        }
+      });
+
+      // Auto-create similar profiles by querying other existing profiles
+      const otherProfiles = await Profile.find({ userId: { $ne: newUser._id } }).limit(10);
+      
+      if (otherProfiles.length > 0) {
+        const similarProfilesData = {
+          userId: newUser._id,
+          similarProfiles: otherProfiles.map((profile, index) => ({
+            userId: profile.userId,
+            username: profile.username,
+            compatibilityScore: 60 + Math.floor(Math.random() * 30) // Random 60-90
+          }))
+        };
+
+        await SimilarProfile.create(similarProfilesData);
+      }
+
+      console.log(`Auto-created profile and similar profiles for ${username}`);
+    } catch (profileErr) {
+      console.error("Failed to auto-create profile for new user:", profileErr);
+      // Continue with signup even if profile creation fails
+    }
 
     // Generate OTP and store hashed OTP in Otp collection
     const otp = generateOtp();

@@ -1,8 +1,59 @@
 import express from "express";
 import Profile from "../models/Profile.js";
+import SimilarProfile from "../models/SimilarProfile.js";
 
 const router = express.Router();
 
+
+// ✅ GET TOP 10 SIMILAR PROFILES FOR A USER (SORTED BY COMPATIBILITY SCORE)
+// 🔥 THIS MUST COME BEFORE /:userId ROUTE
+router.get("/similar/top/:userId", async (req, res) => {
+  try {
+    const similarProfilesRecord = await SimilarProfile.findOne({
+      userId: req.params.userId
+    });
+
+    if (!similarProfilesRecord || !similarProfilesRecord.similarProfiles || similarProfilesRecord.similarProfiles.length === 0) {
+      return res.json([]);
+    }
+
+    // Get the userIds from similar profiles
+    const userIds = similarProfilesRecord.similarProfiles.map(p => p.userId);
+
+    // Fetch full profile documents for these userIds
+    const profiles = await Profile.find({ userId: { $in: userIds } });
+
+    // Combine profiles with compatibility scores
+    const topProfiles = similarProfilesRecord.similarProfiles
+      .map(similarItem => {
+        const profileDoc = profiles.find(p => p.userId.toString() === similarItem.userId.toString());
+        return profileDoc ? {
+          ...profileDoc.toObject(),
+          compatibilityScore: similarItem.compatibilityScore || 0
+        } : null;
+      })
+      .filter(p => p !== null)
+      .sort((a, b) => (b.compatibilityScore || 0) - (a.compatibilityScore || 0))
+      .slice(0, 10);
+
+    res.json(topProfiles);
+
+  } catch (err) {
+    console.error("GET TOP SIMILAR PROFILES ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ✅ GET ALL PROFILES
+router.get("/", async (req, res) => {
+  try {
+    const profiles = await Profile.find().select("-__v");
+    res.json(profiles);
+  } catch (err) {
+    console.error("GET ALL PROFILES ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
 
 router.post("/create", async (req, res) => {
   try {

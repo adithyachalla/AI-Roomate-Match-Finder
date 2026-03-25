@@ -1,24 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { LayoutDashboard, Building2, Users, MessageSquare, BarChart3, Plus as PlusIcon, RefreshCw, TrendingUp, Target, Trophy, Sparkles, Search, Settings, Menu, X } from "lucide-react";
+import { BarChart3, Building2, LayoutDashboard, Menu, MessageSquare, Plus as PlusIcon, RefreshCw, Settings, Sparkles, Target, TrendingUp, Trophy, Users, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import EditListing from "./EditListing";
+import { ListerMessagesTab } from "./ListerMessagesTab";
 
-const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetail }) => {
+const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetail, selectedOwnerId, selectedOwnerName }) => {
   const [listings, setListings] = useState([]);
   const [roommates, setRoommates] = useState([]);
-  const [messages, setMessages] = useState([]);
   const [tenantMatches, setTenantMatches] = useState([]);
   const [subTab, setSubTab] = useState(initialSubTab);
-  const [selectedConversation, setSelectedConversation] = useState(null);
-  const [newMessageText, setNewMessageText] = useState("");
   const [editingListingId, setEditingListingId] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [user, setUser] = useState({});
 
   const fetchListings = () => {
     fetch("http://localhost:5001/api/apartments").then(res => res.json()).then(setListings);
-  };
-
-  const fetchMessages = () => {
-    fetch("http://localhost:5001/api/messages").then(res => res.json()).then(setMessages);
   };
 
   useEffect(() => {
@@ -28,36 +23,22 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
   useEffect(() => {
     fetchListings();
     fetch("http://localhost:5001/api/roommates").then(res => res.json()).then(setRoommates);
-    fetchMessages();
     fetch("http://localhost:5001/api/tenant-matches").then(res => res.json()).then(setTenantMatches);
+  }, []);
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("user"));
+    if (stored?._id) {
+      fetch(`http://localhost:5001/api/profile/${stored._id}`)
+        .then(res => (res.ok ? res.json() : {}))
+        .then(data => setUser(data || {}))
+        .catch(() => setUser({}));
+    }
   }, []);
 
   const handleSubTabChange = (tab) => {
     setSubTab(tab);
     setIsSidebarOpen(false);
-  };
-
-  const handleSendMessage = async () => {
-    if (!newMessageText.trim() || !selectedConversation) return;
-
-    try {
-      const response = await fetch("http://localhost:5001/api/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipient: selectedConversation,
-          text: newMessageText,
-          sender: "Alex Johnson"
-        })
-      });
-
-      if (response.ok) {
-        setNewMessageText("");
-        fetchMessages();
-      }
-    } catch (err) {
-      console.error("Failed to send message:", err);
-    }
   };
 
   const stats = [
@@ -122,15 +103,21 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
           </button>
         </nav>
         <div className="p-4 border-t border-slate-800">
-          <button 
-            onClick={() => {
-              setActiveTab("post-property");
-              setIsSidebarOpen(false);
-            }}
-            className="w-full bg-accent-teal hover:bg-accent-teal/90 text-navy-dark font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-accent-teal/20"
-          >
-            <PlusIcon size={20} /> Add New Listing
-          </button>
+          <div className="flex items-center gap-3">
+            <img
+              src={user?.profilePic || "/default-avatar.png"}
+              alt="profile"
+              className="w-10 h-10 rounded-full border border-slate-600 object-cover"
+            />
+            <div>
+              <p className="text-sm font-semibold text-white truncate">
+                {user?.fullname || "User"}
+              </p>
+              <p className="text-xs text-slate-400 capitalize">
+                {user?.role || "owner"}
+              </p>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -359,10 +346,7 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
                       <button className="text-xs font-bold text-primary hover:underline">View Profile</button>
                     </div>
                     <button 
-                      onClick={() => {
-                        setSelectedConversation(match.name);
-                        handleSubTabChange("messages");
-                      }}
+                      onClick={() => handleSubTabChange("messages")}
                       className="w-full sm:w-auto bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors"
                     >
                       Message
@@ -374,114 +358,7 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
           )}
 
           {subTab === "messages" && (
-            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden flex flex-col md:flex-row h-[600px] md:h-[650px]">
-              {/* Conversations List */}
-              <div className={`
-                ${selectedConversation ? 'hidden md:flex' : 'flex'}
-                w-full md:w-80 border-r border-slate-800 flex-col bg-slate-900/30
-              `}>
-                <div className="p-4 border-b border-slate-800">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-2.5 text-slate-500" size={18} />
-                    <input className="w-full bg-slate-800/50 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none" placeholder="Search messages..." />
-                  </div>
-                </div>
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
-                  {Array.from(new Set([
-                    ...messages.map(m => m.sender === "Alex Johnson" ? m.recipient : m.sender),
-                    ...(selectedConversation ? [selectedConversation] : [])
-                  ])).map(person => {
-                    const lastMsg = [...messages].reverse().find(m => m.sender === person || m.recipient === person);
-                    return (
-                      <div 
-                        key={person} 
-                        onClick={() => setSelectedConversation(person)}
-                        className={`p-4 hover:bg-slate-800 cursor-pointer transition-colors border-b border-slate-800/50 ${selectedConversation === person ? 'bg-primary/10 border-r-4 border-primary' : ''}`}
-                      >
-                        <div className="flex justify-between items-start mb-1">
-                          <h5 className="font-bold text-sm text-white">{person}</h5>
-                          <span className="text-[10px] text-slate-500">{lastMsg?.time || "New"}</span>
-                        </div>
-                        <p className="text-xs text-slate-400 truncate">{lastMsg?.text || "Start a conversation"}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Chat Window */}
-              <div className={`
-                ${!selectedConversation ? 'hidden md:flex' : 'flex'}
-                flex-1 flex-col bg-slate-900/10
-              `}>
-                {selectedConversation ? (
-                  <>
-                    {/* Chat Header */}
-                    <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/30">
-                      <div className="flex items-center gap-3">
-                        <button onClick={() => setSelectedConversation(null)} className="md:hidden p-2 text-slate-400">
-                          <X size={20} />
-                        </button>
-                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                          {selectedConversation.charAt(0)}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-white">{selectedConversation}</h4>
-                          <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest">Online</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"><Settings size={18} /></button>
-                      </div>
-                    </div>
-
-                    {/* Messages Area */}
-                    <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 custom-scrollbar">
-                      {messages
-                        .filter(m => m.sender === selectedConversation || m.recipient === selectedConversation)
-                        .map(msg => (
-                          <div key={msg.id} className={`flex ${msg.sender === "Alex Johnson" ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] md:max-w-[70%] p-3 rounded-2xl text-sm ${
-                              msg.sender === "Alex Johnson" 
-                                ? 'bg-primary text-white rounded-tr-none' 
-                                : 'bg-slate-800 text-slate-200 rounded-tl-none'
-                            }`}>
-                              <p>{msg.text}</p>
-                              <p className={`text-[10px] mt-1 ${msg.sender === "Alex Johnson" ? 'text-white/60' : 'text-slate-500'}`}>
-                                {msg.time}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-
-                    {/* Input Area */}
-                    <div className="p-4 border-t border-slate-800 bg-slate-900/30">
-                      <div className="flex gap-2 md:gap-3">
-                        <input 
-                          value={newMessageText}
-                          onChange={(e) => setNewMessageText(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                          className="flex-1 bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-primary outline-none min-w-0" 
-                          placeholder={`Message ${selectedConversation}...`} 
-                        />
-                        <button 
-                          onClick={handleSendMessage}
-                          className="bg-primary hover:bg-primary/90 text-white px-4 md:px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-primary/20 shrink-0"
-                        >
-                          Send
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-slate-500 p-8 text-center">
-                    <MessageSquare size={48} className="mb-4 opacity-20" />
-                    <p className="font-medium">Select a conversation to start messaging</p>
-                  </div>
-                )}
-              </div>
-            </div>
+            <ListerMessagesTab selectedOwnerId={selectedOwnerId} selectedOwnerName={selectedOwnerName} />
           )}
 
           {subTab === "analytics" && (
