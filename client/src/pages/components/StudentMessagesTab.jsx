@@ -1,8 +1,8 @@
 import { MessageSquare, Search, Send, Settings, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 
-export const StudentMessagesTab = () => {
+export const StudentMessagesTab = ({ selectedOwner = null }) => {
   const location = useLocation();
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -26,34 +26,8 @@ export const StudentMessagesTab = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Load conversations on mount or when roommate is passed via state
-  useEffect(() => {
-    if (currentUser?._id) {
-      loadConversations();
-    }
-
-    // If coming from roommate detail, auto-select conversation
-    if (location.state?.roommateName && location.state?.roommateId) {
-      const conversationId = createConversationId(
-        currentUser._id,
-        location.state.roommateId
-      );
-      setSelectedConversation({
-        conversationId,
-        partnerInfo: {
-          _id: location.state.roommateId,
-          fullname: location.state.roommateName
-        }
-      });
-    }
-  }, [currentUser?._id, location.state]);
-
   // Load conversations
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       const response = await fetch(
         `http://localhost:5001/api/messages/user/${currentUser._id}`
@@ -65,18 +39,9 @@ export const StudentMessagesTab = () => {
     } catch (err) {
       console.error("Error loading conversations:", err);
     }
-  };
+  }, [currentUser._id]);
 
-  // Load messages for selected conversation
-  useEffect(() => {
-    if (selectedConversation?.conversationId) {
-      loadMessages(selectedConversation.conversationId);
-      // Mark messages as read
-      markConversationAsRead(selectedConversation.conversationId);
-    }
-  }, [selectedConversation?.conversationId]);
-
-  const loadMessages = async (conversationId) => {
+  const loadMessages = useCallback(async (conversationId) => {
     try {
       setLoading(true);
       const response = await fetch(
@@ -91,9 +56,9 @@ export const StudentMessagesTab = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const markConversationAsRead = async (conversationId) => {
+  const markConversationAsRead = useCallback(async (conversationId) => {
     try {
       await fetch(
         `http://localhost:5001/api/messages/conversation/${conversationId}/read`,
@@ -106,7 +71,56 @@ export const StudentMessagesTab = () => {
     } catch (err) {
       console.error("Error marking as read:", err);
     }
-  };
+  }, [currentUser._id]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Load conversations on mount or when roommate is passed via state
+  useEffect(() => {
+    if (currentUser?._id) {
+      loadConversations();
+    }
+
+    // If selectedOwner prop is passed (from property detail), auto-select conversation with owner
+    if (selectedOwner?.id && currentUser?._id) {
+      const conversationId = createConversationId(
+        currentUser._id,
+        selectedOwner.id
+      );
+      setSelectedConversation({
+        conversationId,
+        partnerInfo: {
+          _id: selectedOwner.id,
+          fullname: selectedOwner.name
+        }
+      });
+    } 
+    // If coming from roommate detail, auto-select conversation
+    else if (location.state?.roommateName && location.state?.roommateId) {
+      const conversationId = createConversationId(
+        currentUser._id,
+        location.state.roommateId
+      );
+      setSelectedConversation({
+        conversationId,
+        partnerInfo: {
+          _id: location.state.roommateId,
+          fullname: location.state.roommateName
+        }
+      });
+    }
+  }, [currentUser?._id, location.state, selectedOwner, loadConversations]);
+
+  // Load messages for selected conversation
+  useEffect(() => {
+    if (selectedConversation?.conversationId) {
+      loadMessages(selectedConversation.conversationId);
+      // Mark messages as read
+      markConversationAsRead(selectedConversation.conversationId);
+    }
+  }, [selectedConversation?.conversationId, loadMessages, markConversationAsRead]);
 
   const handleSendMessage = async () => {
     if (!newMessageText.trim() || !selectedConversation) return;

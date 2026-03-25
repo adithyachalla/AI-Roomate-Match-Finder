@@ -199,26 +199,6 @@ async function startServer() {
     res.json(data.leads);
   });
 
-  app.get("/api/messages", (req, res) => {
-    const data = getData();
-    res.json(data.messages);
-  });
-
-  app.post("/api/messages", (req, res) => {
-    const data = getData();
-    const newMessage = {
-      id: Date.now(),
-      sender: req.body.sender || "Alex Johnson",
-      recipient: req.body.recipient,
-      text: req.body.text,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      unread: false
-    };
-    data.messages.push(newMessage);
-    saveData(data);
-    res.json(newMessage);
-  });
-
   app.get("/api/tenant-matches", (req, res) => {
     const data = getData();
     res.json(data.tenantMatches);

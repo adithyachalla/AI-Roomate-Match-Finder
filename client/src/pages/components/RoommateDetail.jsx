@@ -144,7 +144,7 @@ const RoommateDetail = ({ roommateId, onBack }) => {
                     />
                   ))}
                 </div>
-                <p className="text-xs text-slate-400 mt-2">Level {profile.lifestyle?.cleanliness || 0}/5</p>
+                <p className="text-xs text-slate-400 mt-2">Level {profile.lifestyle?.cleanliness ?? 0}/5</p>
               </div>
             </div>
           </div>

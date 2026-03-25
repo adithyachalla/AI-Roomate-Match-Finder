@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { PlusCircle, Building2, Inbox, Settings, Users, Lightbulb, ArrowRight, MapPin, Camera, Rocket, ChevronRight, MessageSquare } from "lucide-react";
+import { ArrowRight, Building2, Camera, ChevronRight, Inbox, Lightbulb, MapPin, MessageSquare, PlusCircle, Rocket, Settings, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
   const [listings, setListings] = useState([]);
-  const [messages, setMessages] = useState([]);
+  const [unreadCount] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [uploadedImages, setUploadedImages] = useState([]);
@@ -22,10 +22,6 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
 
   useEffect(() => {
     fetch("http://localhost:5001/api/apartments").then(res => res.json()).then(setListings);
-    fetch("http://localhost:5001/api/messages").then(res => res.json()).then(data => {
-      const sorted = [...data].sort((a, b) => b.id - a.id);
-      setMessages(sorted);
-    });
   }, []);
 
   const handleInputChange = (e) => {
@@ -138,7 +134,7 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
               </button>
               <button onClick={() => navigateToDashboard("messages")} className="flex w-full items-center gap-3 px-3 py-2.5 text-slate-400 hover:bg-slate-800 rounded-xl transition-all">
                 <Inbox size={20} /> Lead Inbox
-                <span className="ml-auto bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">{messages.filter(m => m.unread).length || 3} New</span>
+                <span className="ml-auto bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">{unreadCount} New</span>
               </button>
               <button className="flex w-full items-center gap-3 px-3 py-2.5 text-slate-400 hover:bg-slate-800 rounded-xl transition-all">
                 <Settings size={20} /> Lister Settings
@@ -408,22 +404,14 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
               <h3 className="font-bold flex items-center gap-2">
                 <MessageSquare className="text-primary" size={20} /> Lead Inbox
               </h3>
+              <span className="ml-auto bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">{unreadCount} New</span>
             </div>
-            <div className="divide-y divide-slate-800">
-              {messages.slice(0, 3).map(msg => (
-                <div key={msg.id} onClick={() => navigateToDashboard("messages")} className="p-4 hover:bg-slate-800/50 transition-all cursor-pointer">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-bold text-primary">{msg.sender}</p>
-                    <span className="text-[10px] text-slate-400">{msg.time}</span>
-                  </div>
-                  <p className="text-xs font-semibold text-slate-300 mb-1">Message from {msg.sender}</p>
-                  <p className="text-xs text-slate-500 line-clamp-1 italic">"{msg.text}"</p>
-                </div>
-              ))}
+            <div className="p-4 text-center">
+              <p className="text-xs text-slate-400 mb-3">Check your message inbox for the latest lead inquiries.</p>
+              <button onClick={() => navigateToDashboard("messages")} className="w-full py-2 text-xs font-bold bg-primary/10 text-primary rounded-lg border border-primary/30 hover:bg-primary/20 transition-colors">
+                View All Messages
+              </button>
             </div>
-            <button onClick={() => navigateToDashboard("messages")} className="w-full py-3 text-xs font-bold text-slate-400 border-t border-slate-800 hover:text-primary transition-colors">
-              Go to Messages
-            </button>
           </div>
         </aside>
       </div>

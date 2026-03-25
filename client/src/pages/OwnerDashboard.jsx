@@ -1,19 +1,39 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import ApartmentListings from "./components/ApartmentListings";
 import Header from "./components/Header";
 import ListerDashboard from "./components/ListerDashboard";
 import PostProperty from "./components/PostProperty";
 import PropertyDetail from "./components/PropertyDetail";
-import RoommateFinder from "./components/RoomateFinder";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("apartments");
+  const location = useLocation();
+  const navigate = useNavigate();
+  // Default to dashboard if redirected from PropertyDetail with ownerId or if switching roles, otherwise apartments
+  const [activeTab, setActiveTab] = useState(
+    location.state?.ownerId || location.state?.switchRole ? "dashboard" : "apartments"
+  );
   const [dashboardSubTab, setDashboardSubTab] = useState("overview");
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
   const [previousTab, setPreviousTab] = useState("apartments");
   const [selectedOwnerId, setSelectedOwnerId] = useState(null);
   const [selectedOwnerName, setSelectedOwnerName] = useState(null);
+
+  const logout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+
+  // Handle redirect from PropertyDetail when messaging owner
+  useEffect(() => {
+    if (location.state?.ownerId && location.state?.ownerName) {
+      setSelectedOwnerId(location.state.ownerId);
+      setSelectedOwnerName(location.state.ownerName);
+      setDashboardSubTab("messages");
+      setActiveTab("dashboard");
+    }
+  }, [location.state]);
 
   const handleTabChange = (tab) => {
     if (tab === "dashboard") {
@@ -44,7 +64,13 @@ export default function App() {
   return (
     <div className="dark h-screen flex flex-col bg-background-dark text-white">
       {/* allow vertical scrolling for page content */}
-      <Header activeTab={activeTab} setActiveTab={handleTabChange} />
+      <Header 
+        activeTab={activeTab} 
+        setActiveTab={handleTabChange}
+        onLogout={logout}
+        showEditProfile={false}
+        showListProperty={true}
+      />
       
       <div className="flex-1 flex flex-col overflow-y-auto">
         <AnimatePresence mode="wait">
@@ -59,12 +85,12 @@ export default function App() {
             {activeTab === "apartments" && <ApartmentListings onViewDetail={viewPropertyDetail} />}
             {activeTab === "post-property" && <PostProperty setActiveTab={setActiveTab} navigateToDashboard={navigateToDashboard} />}
             {activeTab === "dashboard" && <ListerDashboard setActiveTab={setActiveTab} initialSubTab={dashboardSubTab} onViewDetail={viewPropertyDetail} selectedOwnerId={selectedOwnerId} selectedOwnerName={selectedOwnerName} />}
-            {activeTab === "roommates" && <RoommateFinder />}
             {activeTab === "property-detail" && (
               <PropertyDetail 
                 propertyId={selectedPropertyId} 
                 onBack={() => setActiveTab(previousTab)} 
                 onMessageOwner={messageOwner}
+                dashboardType="owner"
               />
             )}
           </motion.div>

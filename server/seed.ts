@@ -104,6 +104,12 @@ const seed = async () => {
         passwordHash: "hashed_password",
       },
       {
+        username: "sarah_miller",
+        email: "sarah.miller@example.com",
+        fullname: "Sarah Miller",
+        passwordHash: "hashed_password",
+      },
+      {
         username: "david_kim",
         email: "david.kim@example.com",
         fullname: "David Kim",
@@ -141,7 +147,7 @@ const seed = async () => {
         lifestyle: {
           sleep: "early",
           social: "moderate",
-          cleanliness: 8
+          cleanliness: 4
         },
         livingPreferences: {
           budget: 2000,
@@ -300,7 +306,7 @@ const seed = async () => {
       lifestyle: {
         sleep: ["early", "late", "early", "late", "early", "late", "early", "late", "early", "late", "early", "late"][index],
         social: ["quiet", "social", "moderate", "social", "quiet", "very social", "quiet", "moderate", "quiet", "very social", "quiet", "moderate"][index],
-        cleanliness: [9 - (index % 3), 6 + (index % 4), 8, 5, 9, 7, 8, 6, 9, 7, 8, 6][index]
+        cleanliness: [5, 3, 4, 2, 5, 4, 3, 2, 5, 3, 4, 3][index]
       },
       livingPreferences: {
         budget: 1000 + index * 100,

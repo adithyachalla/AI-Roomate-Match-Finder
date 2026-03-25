@@ -8,9 +8,9 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
   const [roommates, setRoommates] = useState([]);
   const [tenantMatches, setTenantMatches] = useState([]);
   const [subTab, setSubTab] = useState(initialSubTab);
-  const [selectedConversation, setSelectedConversation] = useState(null);
   const [editingListingId, setEditingListingId] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [user, setUser] = useState({});
 
   const fetchListings = () => {
     fetch("http://localhost:5001/api/apartments").then(res => res.json()).then(setListings);
@@ -24,6 +24,16 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
     fetchListings();
     fetch("http://localhost:5001/api/roommates").then(res => res.json()).then(setRoommates);
     fetch("http://localhost:5001/api/tenant-matches").then(res => res.json()).then(setTenantMatches);
+  }, []);
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("user"));
+    if (stored?._id) {
+      fetch(`http://localhost:5001/api/profile/${stored._id}`)
+        .then(res => (res.ok ? res.json() : {}))
+        .then(data => setUser(data || {}))
+        .catch(() => setUser({}));
+    }
   }, []);
 
   const handleSubTabChange = (tab) => {
@@ -93,15 +103,21 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
           </button>
         </nav>
         <div className="p-4 border-t border-slate-800">
-          <button 
-            onClick={() => {
-              setActiveTab("post-property");
-              setIsSidebarOpen(false);
-            }}
-            className="w-full bg-accent-teal hover:bg-accent-teal/90 text-navy-dark font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-accent-teal/20"
-          >
-            <PlusIcon size={20} /> Add New Listing
-          </button>
+          <div className="flex items-center gap-3">
+            <img
+              src={user?.profilePic || "/default-avatar.png"}
+              alt="profile"
+              className="w-10 h-10 rounded-full border border-slate-600 object-cover"
+            />
+            <div>
+              <p className="text-sm font-semibold text-white truncate">
+                {user?.fullname || "User"}
+              </p>
+              <p className="text-xs text-slate-400 capitalize">
+                {user?.role || "owner"}
+              </p>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -330,10 +346,7 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
                       <button className="text-xs font-bold text-primary hover:underline">View Profile</button>
                     </div>
                     <button 
-                      onClick={() => {
-                        setSelectedConversation(match.name);
-                        handleSubTabChange("messages");
-                      }}
+                      onClick={() => handleSubTabChange("messages")}
                       className="w-full sm:w-auto bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors"
                     >
                       Message

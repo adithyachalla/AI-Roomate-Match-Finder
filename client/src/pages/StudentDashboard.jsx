@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import ApartmentListings from "./components/ApartmentListings";
+import PropertyDetail from "./components/PropertyDetail";
 import { StudentMessagesTab } from "./components/StudentMessagesTab";
+import Header from "./components/Header";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -9,13 +12,21 @@ export default function StudentDashboard() {
   const [topProfiles, setTopProfiles] = useState([]);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [selectedPropertyId, setSelectedPropertyId] = useState(null);
+  const [selectedOwner, setSelectedOwner] = useState(null);
 
-  // Check if coming from roommate detail with state
+  // Check if coming from roommate detail or property detail with state
   useEffect(() => {
     if (location.state?.roommateId && location.state?.roommateName) {
-      setActiveTab("conversations");
-      // Clear the state after using it
-      window.history.replaceState({}, document.title);
+      setActiveTab("messages");
+      setSelectedOwner(null);
+    } else if (location.state?.ownerId && location.state?.ownerName) {
+      setActiveTab("messages");
+      setSelectedOwner({
+        id: location.state.ownerId,
+        name: location.state.ownerName,
+        propertyTitle: location.state.propertyTitle
+      });
     }
   }, [location.state]);
 
@@ -55,9 +66,9 @@ export default function StudentDashboard() {
     const currentRole = user?.role || "student";
 
     if (currentRole === "student") {
-      navigate("/owner-dashboard");
+      navigate("/owner-dashboard", { state: { switchRole: true } });
     } else {
-      navigate("/student-dashboard");
+      navigate("/student-dashboard", { state: { switchRole: true } });
     }
   };
 
@@ -112,6 +123,19 @@ export default function StudentDashboard() {
     }
   };
 
+  const handleViewProperty = (propertyId) => {
+    setSelectedPropertyId(propertyId);
+  };
+
+  const handleBackFromProperty = () => {
+    setSelectedPropertyId(null);
+  };
+
+  const handleMessageOwner = (ownerId, ownerName) => {
+    setSelectedPropertyId(null);
+    setActiveTab("messages");
+  };
+
   if (user === undefined) {
     return <div className="text-white p-10">Loading...</div>;
   }
@@ -119,115 +143,81 @@ export default function StudentDashboard() {
   const isEmptyProfile = !user || Object.keys(user).length === 0;
 
   return (
-    <div className="flex h-screen bg-background-dark text-white">
-
-      {/* SIDEBAR */}
- <aside className="w-64 bg-gradient-to-b from-slate-900 to-slate-950 border-r border-white/10 p-6 flex flex-col">
-
-  {/* LOGO */}
-  <div className="flex items-center gap-3 mb-10">
-    <div className="relative w-8 h-8">
-      <div className="absolute inset-0 border-[3px] border-white/20 rounded-md rotate-45 -translate-x-1 -translate-y-1"></div>
-      <div className="absolute inset-0 border-[3px] border-accent-teal rounded-md rotate-45 translate-x-1 translate-y-1"></div>
-    </div>
-
-    <h2 className="text-white text-xl font-black tracking-tight">
-      Room<span className="text-accent-teal">Sync</span>
-    </h2>
-  </div>
-
-  {/* NAV */}
-  <div className="space-y-3 text-sm">
-
-    <button 
-      onClick={() => setActiveTab("dashboard")}
-      className={`w-full text-left px-3 py-2 rounded-lg transition ${activeTab === "dashboard" ? "bg-primary/10 text-primary font-bold" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
-    >
-      Top Matches
-    </button>
-
-    <button 
-      onClick={() => navigate("/browse-roommates")}
-      className="w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition"
-    >
-      Browse Roommates
-    </button>
-
-    <button className="w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition">
-      Saved Profiles
-    </button>
-
-    <button 
-      onClick={() => setActiveTab("conversations")}
-      className={`w-full text-left px-3 py-2 rounded-lg transition ${activeTab === "conversations" ? "bg-primary/10 text-primary font-bold" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
-    >
-      Conversations
-    </button>
-
-  </div>
-
-  {/* PROFILE SECTION */}
-  <div className="mt-auto pt-6 border-t border-white/10">
-
-    {/* USER INFO */}
-    <div className="flex items-center gap-3 mb-5">
-      <img
-        src={user?.profilePic || "/default-avatar.png"}
-        alt="profile"
-        className="w-12 h-12 rounded-full border border-white/20 object-cover"
+    <div className="flex flex-col h-screen bg-background-dark text-white">
+      {/* HEADER */}
+      <Header 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab}
+        onLogout={logout}
+        onEditProfile={() => navigate("/onboarding")}
+        showEditProfile={true}
+        showListProperty={false}
       />
 
-      <div>
-        <p className="text-sm font-semibold text-white">
-          {user?.fullname || "User"}
-        </p>
-        <p className="text-xs text-slate-400">
-          {user?.role || "student"}
-        </p>
-      </div>
-    </div>
+      <div className="flex flex-1 overflow-hidden">
+        {/* SIDEBAR */}
+        <aside className="w-64 bg-gradient-to-b from-slate-900 to-slate-950 border-r border-white/10 p-6 flex flex-col overflow-y-auto">
 
-    {/* ACTIONS */}
-<div className="space-y-3">
+          {/* NAV */}
+          <div className="space-y-3 text-sm flex-1">
 
-  {/* EDIT PROFILE */}
-  <button
-    onClick={() => navigate("/onboarding")}
-    className="w-full flex items-center justify-center gap-2 border border-white/10 py-2 rounded-xl text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition"
-  >
-    ✏️ Edit Profile
-  </button>
+            <button 
+              onClick={() => setActiveTab("dashboard")}
+              className={`w-full text-left px-3 py-2 rounded-lg transition ${activeTab === "dashboard" ? "bg-primary/10 text-primary font-bold" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
+            >
+              Top Matches
+            </button>
 
-  {/* SWITCH ROLE */}
-  <button
-    onClick={toggleRole}
-    className="w-full bg-primary text-white py-2 rounded-xl text-sm font-bold shadow-md hover:scale-[1.02] transition"
-  >
-    Switch Role
-  </button>
+            <button 
+              onClick={() => navigate("/browse-roommates")}
+              className="w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition"
+            >
+              Browse Roommates
+            </button>
 
-  {/* LOGOUT */}
-  <button
-    onClick={logout}
-    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition"
-  >
-    🚪 Logout
-  </button>
+            <button className="w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition">
+              Saved Profiles
+            </button>
 
-  {/* DELETE */}
-  <button
-    onClick={handleDeleteAccount}
-    className="w-full bg-red-600 text-white py-2 rounded-xl text-sm font-bold shadow-md hover:bg-red-700 transition"
-  >
-    Delete Account
-  </button>
+            <button 
+              onClick={() => setActiveTab("messages")}
+              className={`w-full text-left px-3 py-2 rounded-lg transition ${activeTab === "messages" ? "bg-primary/10 text-primary font-bold" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
+            >
+              Messages
+            </button>
 
-</div>
-  </div>
-</aside>
+            <button 
+              onClick={() => setActiveTab("apartments")}
+              className={`w-full text-left px-3 py-2 rounded-lg transition ${activeTab === "apartments" ? "bg-primary/10 text-primary font-bold" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
+            >
+              Find Apartments
+            </button>
 
-      {/* MAIN */}
-      <main className="flex-1 p-8 overflow-y-auto">
+          </div>
+
+          {/* PROFILE SECTION - Bottom */}
+          <div className="pt-6 border-t border-white/10">
+            <div className="flex items-center gap-3">
+              <img
+                src={user?.profilePic || "/default-avatar.png"}
+                alt="profile"
+                className="w-10 h-10 rounded-full border border-white/20 object-cover"
+              />
+              <div>
+                <p className="text-sm font-semibold text-white truncate">
+                  {user?.fullname || "User"}
+                </p>
+                <p className="text-xs text-slate-400 capitalize">
+                  {user?.role || "student"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </aside>
+
+        {/* MAIN */}
+        <main className="flex-1 overflow-y-auto p-8">
 
         {activeTab === "dashboard" && (
           <>
@@ -393,11 +383,25 @@ export default function StudentDashboard() {
           </>
         )}
 
-        {activeTab === "conversations" && (
-          <StudentMessagesTab />
+        {activeTab === "messages" && (
+          <StudentMessagesTab selectedOwner={selectedOwner} />
+        )}
+
+        {activeTab === "apartments" && !selectedPropertyId && (
+          <ApartmentListings onViewDetail={handleViewProperty} />
+        )}
+
+        {activeTab === "apartments" && selectedPropertyId && (
+          <PropertyDetail 
+            propertyId={selectedPropertyId}
+            onBack={handleBackFromProperty}
+            onMessageOwner={handleMessageOwner}
+            dashboardType="student"
+          />
         )}
 
       </main>
+      </div>
     </div>
   );
 }

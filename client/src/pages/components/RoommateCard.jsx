@@ -108,6 +108,7 @@ const RoommateCard = ({ profile, onClick }) => {
                 />
               ))}
             </div>
+            <p className="text-xs text-slate-400 mt-1">{profile.lifestyle?.cleanliness || 0}/5</p>
           </div>
         </div>
 
