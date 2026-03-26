@@ -357,8 +357,8 @@ export async function resendOtp(req: Request, res: Response) {
 export async function seedDummyUsers() {
   try {
     const usersToEnsure = [
-      { email: "alice@usc.edu", password: "Password123" },
-      { email: "bob@usc.edu", password: "SecurePass456" }
+      { email: "alice@usc.edu", username: "alice_johnson", fullname: "Alice Johnson", password: "Password123" },
+      { email: "bob@usc.edu", username: "bob_smith", fullname: "Bob Smith", password: "SecurePass456" }
     ];
 
     for (const u of usersToEnsure) {
@@ -366,7 +366,12 @@ export async function seedDummyUsers() {
       if (!exists) {
         const salt = await bcrypt.genSalt(SALT_ROUNDS);
         const hash = await bcrypt.hash(u.password, salt);
-        await User.create({ email: u.email.toLowerCase(), passwordHash: hash });
+        await User.create({ 
+          email: u.email.toLowerCase(), 
+          username: u.username,
+          fullname: u.fullname,
+          passwordHash: hash 
+        });
         console.log(`Seeded user ${u.email} / ${u.password}`);
       } else {
         console.log(`User ${u.email} exists — skipping seed.`);
