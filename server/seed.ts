@@ -162,9 +162,6 @@ const seed = async () => {
     }
 
     // Seed listings with ownerId references
-    await Listing.deleteMany({});
-    console.log("Cleared existing listings");
-
     const ownerMap = {};
     createdListingOwnerUsers.forEach(user => {
       if (user.fullname === "Alex Johnson") ownerMap["Alex Johnson"] = user._id;
@@ -172,7 +169,6 @@ const seed = async () => {
       if (user.fullname === "David Kim") ownerMap["David Kim"] = user._id;
     });
 
-    // Add ownerId to listings
     const listingsWithOwners = seedListings.map(listing => ({
       ...listing,
       ownerId: ownerMap[listing.owner.name]
@@ -184,9 +180,9 @@ const seed = async () => {
     // Seed sample profiles with similar profiles and compatibility scores
     const sampleProfiles = [
       {
-        username: "sarah_miller",
-        email: "sarah@example.com",
-        fullname: "Sarah Miller",
+        username: "sophia_miller",
+        email: "sophia@example.com",
+        fullname: "Sophia Miller",
         passwordHash: "hashed_password",
       },
       {
@@ -227,7 +223,7 @@ const seed = async () => {
       },
       {
         username: "sophia_taylor",
-        email: "sophia@example.com",
+        email: "sophia.taylor@example.com",
         fullname: "Sophia Taylor",
         passwordHash: "hashed_password",
       },
@@ -287,7 +283,7 @@ const seed = async () => {
     const profileData = createdUsers.map((user, index) => ({
       userId: user._id,
       username: user.username,
-      fullname: ["Sarah Miller", "Alex Chen", "Emma Wilson", "Liam O'Brien", "Mike Johnson", "Olivia Brown", "Noah Davis", "Sophia Taylor", "Ethan Martin", "Ava Anderson", "James Thomas", "Isabella Jackson"][index],
+      fullname: ["Sophia Miller", "Alex Chen", "Emma Wilson", "Liam O'Brien", "Mike Johnson", "Olivia Brown", "Noah Davis", "Sophia Taylor", "Ethan Martin", "Ava Anderson", "James Thomas", "Isabella Jackson"][index],
       bio: [
         "Graduate student at USC. Quiet, focus-oriented, and loves coffee.",
         "Engineering major. Loves gaming and cooking. Looking for someone social.",
@@ -340,8 +336,7 @@ const seed = async () => {
         };
       });
 
-      // Delete old similar profiles and create new ones
-      await SimilarProfile.deleteMany({});
+      // Create similar profiles (new ones after clearing)
       await SimilarProfile.insertMany(similarProfilesDataArray);
       console.log("Seeded similar profiles for ALL users (seeded + custom) with compatibility scores");
     }
