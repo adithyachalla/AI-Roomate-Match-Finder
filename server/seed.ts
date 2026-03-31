@@ -5,6 +5,7 @@ import { Message } from "./models/Message.js";
 import Profile from "./models/Profile.js";
 import SimilarProfile from "./models/SimilarProfile.js";
 import User from "./models/User.js";
+import { rebuildAllSimilarProfiles } from "./matching/rebuildSimilarProfiles.js";
 
 dotenv.config();
 
@@ -315,31 +316,8 @@ const seed = async () => {
     const createdProfiles = await Profile.insertMany(profileData);
     console.log(`Seeded ${createdProfiles.length} profiles successfully`);
 
-    // Create similar profiles for ALL users (seeded + custom users)
-    const allUsers = await User.find();
-    
-    if (allUsers.length > 1) {
-      const similarProfilesDataArray = allUsers.map((user) => {
-        // Get all other users (exclude current user)
-        const otherUsers = allUsers.filter(otherUser => otherUser._id.toString() !== user._id.toString());
-        
-        // Filter out any users without username
-        const validOtherUsers = otherUsers.filter(u => u.username && u.username.trim() !== '');
-        
-        return {
-          userId: user._id,
-          similarProfiles: validOtherUsers.slice(0, 10).map((otherUser) => ({
-            userId: otherUser._id,
-            username: otherUser.username,
-            compatibilityScore: 85 + Math.floor(Math.random() * 15) // Random 85-100
-          }))
-        };
-      });
-
-      // Create similar profiles (new ones after clearing)
-      await SimilarProfile.insertMany(similarProfilesDataArray);
-      console.log("Seeded similar profiles for ALL users (seeded + custom) with compatibility scores");
-    }
+    await rebuildAllSimilarProfiles();
+    console.log("Rebuilt similar profiles (weighted-v1) for all users with profiles");
 
     await mongoose.disconnect();
     console.log("Done");
