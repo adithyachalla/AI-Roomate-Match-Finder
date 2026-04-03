@@ -6,8 +6,8 @@ import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import Otp from "../models/Otp.js";
 import Profile from "../models/Profile.js";
-import SimilarProfile from "../models/SimilarProfile.js";
 import User from "../models/User.js";
+import { rebuildAllSimilarProfiles } from "../matching/rebuildSimilarProfiles.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "change_this_secret";
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS || "10", 10);
@@ -226,23 +226,13 @@ export async function signup(req: Request, res: Response) {
         }
       });
 
-      // Auto-create similar profiles by querying other existing profiles
-      const otherProfiles = await Profile.find({ userId: { $ne: newUser._id } }).limit(10);
-      
-      if (otherProfiles.length > 0) {
-        const similarProfilesData = {
-          userId: newUser._id,
-          similarProfiles: otherProfiles.map((profile, index) => ({
-            userId: profile.userId,
-            username: profile.username,
-            compatibilityScore: 60 + Math.floor(Math.random() * 30) // Random 60-90
-          }))
-        };
-
-        await SimilarProfile.create(similarProfilesData);
+      try {
+        await rebuildAllSimilarProfiles();
+      } catch (e) {
+        console.error("rebuildAllSimilarProfiles after signup profile:", e);
       }
 
-      console.log(`Auto-created profile and similar profiles for ${username}`);
+      console.log(`Auto-created profile and rebuilt matches for ${username}`);
     } catch (profileErr) {
       console.error("Failed to auto-create profile for new user:", profileErr);
       // Continue with signup even if profile creation fails

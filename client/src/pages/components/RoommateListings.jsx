@@ -36,8 +36,10 @@ const RoommateListings = ({ onViewDetail }) => {
         
         const data = await response.json();
         
-        // Filter out current user's profile
-        const filteredData = data.filter(profile => profile.userId !== currentUserId);
+        // Filter out current user (userId may be ObjectId in JSON; compare as strings)
+        const filteredData = data.filter(
+          (profile) => String(profile.userId) !== String(currentUserId ?? "")
+        );
         
         setAllRoommates(filteredData);
         setFilteredRoommates(filteredData);

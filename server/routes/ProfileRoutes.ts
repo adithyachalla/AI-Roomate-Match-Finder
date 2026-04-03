@@ -1,6 +1,8 @@
 import express from "express";
 import Profile from "../models/Profile.js";
 import SimilarProfile from "../models/SimilarProfile.js";
+import { sameUserId } from "../matching/ids.js";
+import { rebuildAllSimilarProfiles } from "../matching/rebuildSimilarProfiles.js";
 
 const router = express.Router();
 
@@ -24,15 +26,20 @@ router.get("/similar/top/:userId", async (req, res) => {
     const profiles = await Profile.find({ userId: { $in: userIds } });
 
     // Combine profiles with compatibility scores
+    const viewerId = req.params.userId;
+
     const topProfiles = similarProfilesRecord.similarProfiles
       .map(similarItem => {
+        if (sameUserId(similarItem.userId, viewerId)) {
+          return null;
+        }
         const profileDoc = profiles.find(p => p.userId.toString() === similarItem.userId.toString());
         return profileDoc ? {
           ...profileDoc.toObject(),
           compatibilityScore: similarItem.compatibilityScore || 0
         } : null;
       })
-      .filter(p => p !== null)
+      .filter((p): p is NonNullable<typeof p> => p !== null)
       .sort((a, b) => (b.compatibilityScore || 0) - (a.compatibilityScore || 0))
       .slice(0, 10);
 
@@ -69,6 +76,12 @@ router.post("/create", async (req, res) => {
         { new: true }
       );
 
+      try {
+        await rebuildAllSimilarProfiles();
+      } catch (e) {
+        console.error("rebuildAllSimilarProfiles after profile update:", e);
+      }
+
       return res.json(updated);
     }
 
@@ -77,6 +90,12 @@ router.post("/create", async (req, res) => {
       userId,
       ...profileData
     });
+
+    try {
+      await rebuildAllSimilarProfiles();
+    } catch (e) {
+      console.error("rebuildAllSimilarProfiles after profile create:", e);
+    }
 
     res.json(profile);
 
@@ -131,6 +150,12 @@ router.put("/update/:userId", async (req, res) => {
 
     if (!updated) {
       return res.status(404).json({ message: "Profile not found" });
+    }
+
+    try {
+      await rebuildAllSimilarProfiles();
+    } catch (e) {
+      console.error("rebuildAllSimilarProfiles after profile put:", e);
     }
 
     res.json(updated);
