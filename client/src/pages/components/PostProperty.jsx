@@ -26,6 +26,9 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
   const [errors, setErrors] = useState({});
   const [uploadedImages, setUploadedImages] = useState([]);
   const [mapCenter, setMapCenter] = useState([34.022499, -118.285126]); // Default to USC Campus
+  const [ownerId, setOwnerId] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [ownerAvatar, setOwnerAvatar] = useState("");
   
   const [formData, setFormData] = useState({
     title: "",
@@ -48,6 +51,25 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
       const sorted = [...data].sort((a, b) => b.id - a.id);
       setMessages(sorted);
     });
+    const loadOwner = async () => {
+      try {
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+        if (!storedUser?._id) return;
+
+        const res = await fetch(`http://localhost:5001/api/profile/${storedUser._id}`);
+        const profile = await res.json();
+
+        // profile.userId is the owner's userId reference
+        setOwnerId(profile.userId || storedUser._id);
+        setOwnerName(profile.fullname || storedUser.fullname || "");
+        setOwnerAvatar(profile.profilePic || "");
+      } catch (err) {
+        console.error("Failed to load owner profile:", err);
+      }
+    };
+
+    loadOwner();
   }, []);
 
   const handleInputChange = (e) => {
@@ -140,6 +162,7 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
     try {
       const latVal = parseFloat(formData.lat);
       const lngVal = parseFloat(formData.lng);
+      const user = JSON.parse(localStorage.getItem("user"));
 
       const payload = {
         ...formData,
@@ -151,9 +174,10 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
         image_url: uploadedImages[0],
         images: uploadedImages,
         distance: "0.5 mi to Campus", // Mock distance
+        ownerId: ownerId,
         owner: {
-          name: "Alex Johnson",
-          avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80"
+          name: ownerName,
+          avatar: ownerAvatar
         }
       };
 

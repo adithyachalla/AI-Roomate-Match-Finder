@@ -6,11 +6,13 @@ import Profile from "./models/Profile.js";
 import SimilarProfile from "./models/SimilarProfile.js";
 import User from "./models/User.js";
 import { rebuildAllSimilarProfiles } from "./matching/rebuildSimilarProfiles.js";
+import { ObjectId } from "mongodb";
 
 dotenv.config();
 
 const seedListings = [
   {
+    ownerId: new mongoose.Types.ObjectId('69d08f532f0aac4b953ec93c'),
     title: "Skyview Residences",
     description: "A modern 2-bedroom apartment near USC campus with top amenities.",
     price: 1850,
@@ -37,6 +39,7 @@ const seedListings = [
     address: "University Park, LA",
   },
   {
+    ownerId: new mongoose.Types.ObjectId('69d08f532f0aac4b953ec93d'),
     title: "Uptown Lofts",
     description: "Cozy 1-bedroom loft in West Adams, pet friendly with WiFi included.",
     price: 1400,
@@ -63,6 +66,7 @@ const seedListings = [
     address: "West Adams, LA",
   },
   {
+    ownerId: new mongoose.Types.ObjectId('69d08f532f0aac4b953ec93e'),
     title: "The Bradhurst",
     description: "Spacious 3-bedroom unit in Exposition Park, furnished with parking.",
     price: 2100,

@@ -306,7 +306,7 @@ const PropertyDetail = ({ propertyId, onBack, onMessageOwner, dashboardType = "s
               </div>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed">
-              Alex has been a verified lister on RoomSync since 2023 and has successfully matched 15+ students with their perfect homes.
+              {(property.owner?.name || "This lister")} has been a verified lister on RoomSync since 2023 and has successfully matched 15+ students with their perfect homes.
             </p>
             <button 
               onClick={() => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, ChevronDown, Sparkles, MapPin } from "lucide-react";
+import { Search, ChevronDown, MapPin } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import ApartmentCard from "./ApartmentCard";
@@ -228,11 +228,6 @@ const ApartmentListings = ({ onViewDetail }) => {
                 </div>
               )}
             </div>
-
-            <button className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 text-primary">
-              <Sparkles size={16} />
-              <span className="text-sm font-bold">AI Matches Only</span>
-            </button>
           </div>
         </div>
       </div>

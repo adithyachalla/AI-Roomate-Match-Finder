@@ -26,15 +26,33 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
     fetch("http://localhost:5001/api/tenant-matches").then(res => res.json()).then(setTenantMatches);
   }, []);
 
+  const [ownerId, setOwnerId] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [profile, setProfile] = useState(null);
+
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("user"));
-    if (stored?._id) {
-      fetch(`http://localhost:5001/api/profile/${stored._id}`)
-        .then(res => (res.ok ? res.json() : {}))
-        .then(data => setUser(data || {}))
-        .catch(() => setUser({}));
-    }
+    const loadOwner = async () => {
+      try {
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+        if (!storedUser?._id) return;
+
+        const res = await fetch(`http://localhost:5001/api/profile/${storedUser._id}`);
+        const profile = await res.json();
+        setProfile(profile);
+
+        setOwnerId(profile.userId || storedUser._id);
+        setOwnerName(profile.fullname || storedUser.fullname || "");
+      } catch (err) {
+        console.error("Failed to load owner profile:", err);
+      }
+    };
+
+    loadOwner();
   }, []);
+  const myListings = Array.isArray(listings)
+    ? listings.filter((listing) => String(listing.ownerId) === String(ownerId))
+    : [];
 
   const handleSubTabChange = (tab) => {
     setSubTab(tab);
@@ -105,16 +123,16 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
         <div className="p-4 border-t border-slate-800">
           <div className="flex items-center gap-3">
             <img
-              src={user?.profilePic || "/default-avatar.png"}
+              src={profile?.profilePic || "/default-avatar.png"}
               alt="profile"
               className="w-10 h-10 rounded-full border border-slate-600 object-cover"
             />
             <div>
               <p className="text-sm font-semibold text-white truncate">
-                {user?.fullname || "User"}
+                {profile?.fullname || "User"}
               </p>
               <p className="text-xs text-slate-400 capitalize">
-                {user?.role || "owner"}
+                {profile?.role || "owner"}
               </p>
             </div>
           </div>
@@ -275,33 +293,44 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h3 className="text-2xl font-bold text-white">My Listings</h3>
-                <button 
+                <button
                   onClick={() => setActiveTab("post-property")}
                   className="bg-primary text-white px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                 >
                   <PlusIcon size={18} /> New Listing
                 </button>
               </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {listings.map(listing => (
+                {myListings.map((listing) => (
                   <div
                     key={listing._id}
                     className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden group cursor-pointer"
                     onClick={() => onViewDetail(listing._id)}
                   >
                     <div className="h-48 relative overflow-hidden">
-                      <img src={listing.images?.[0]} alt={listing.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                      <img
+                        src={listing.images?.[0]}
+                        alt={listing.title}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
                       <div className="absolute top-3 right-3 bg-navy-dark/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white uppercase">
                         {listing.status}
                       </div>
                     </div>
+
                     <div className="p-5">
-                      <h4 className="font-bold text-lg text-white mb-1 truncate">{listing.title}</h4>
-                      <p className="text-sm text-slate-500 mb-4 truncate">{listing.address}</p>
+                      <h4 className="font-bold text-lg text-white mb-1 truncate">
+                        {listing.title}
+                      </h4>
+                      <p className="text-sm text-slate-500 mb-4 truncate">
+                        {listing.address}
+                      </p>
+
                       <div className="flex items-center justify-between">
                         <span className="text-primary font-bold">${listing.price}/mo</span>
                         <div className="flex items-center gap-2">
-                          <button 
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingListingId(listing._id);
@@ -311,7 +340,9 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
                           >
                             <Settings size={16} />
                           </button>
-                          <button className="p-2 hover:bg-slate-800 rounded-lg text-slate-400"><BarChart3 size={16} /></button>
+                          <button className="p-2 hover:bg-slate-800 rounded-lg text-slate-400">
+                            <BarChart3 size={16} />
+                          </button>
                         </div>
                       </div>
                     </div>

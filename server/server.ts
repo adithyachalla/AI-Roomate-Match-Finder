@@ -14,6 +14,7 @@ import profileRoutes from "./routes/ProfileRoutes.js";
 import authRoutes from "./routes/auth.js";
 import messagesRoutes from "./routes/messages.js";
 import userRoutes from "./routes/userRoutes.js";
+import Profile from "./models/Profile.js";
 
 // ESM-safe __filename / __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -147,21 +148,37 @@ async function startServer() {
     try {
       const body = { ...req.body };
 
-      // Transform lat/lng from form into GeoJSON location for MongoDB
+      if (!body.ownerId) {
+        return res.status(400).json({ error: "Owner ID required" });
+      }
+
+      const profile = await Profile.findOne({ userId: body.ownerId });
+      if (!profile) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
       if (body.lat !== undefined && body.lng !== undefined) {
         body.location = {
           type: "Point",
-          coordinates: [parseFloat(body.lng), parseFloat(body.lat)] // [longitude, latitude]
+          coordinates: [parseFloat(body.lng), parseFloat(body.lat)],
         };
         delete body.lat;
         delete body.lng;
       }
 
+      // keep ownerId consistent with what PostProperty.jsx sends
+      body.ownerId = profile.userId;
+
+      body.owner = {
+        name: profile.fullname,
+        avatar: profile.profilePic || "",
+      };
+
       const listing = await Listing.create(body);
-      res.json(listing);
+      return res.status(201).json(listing);
     } catch (error) {
       console.error("Create listing error:", error);
-      res.status(500).json({ error: "Failed to create listing" });
+      return res.status(500).json({ error: "Failed to create listing" });
     }
   });
 
