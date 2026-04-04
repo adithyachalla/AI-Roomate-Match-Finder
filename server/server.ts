@@ -83,8 +83,8 @@ async function startServer() {
   const app = express();
   const PORT = 5001;
 
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  app.use(express.json({ limit: "100mb" }));
+  app.use(express.urlencoded({ limit: "100mb", extended: true }));
   app.use(cors());
 
   // Mount auth routes (password -> OTP)
@@ -168,10 +168,33 @@ async function startServer() {
   // PUT update listing
   app.put("/api/apartments/:id", async (req, res) => {
     try {
-      const listing = await Listing.findByIdAndUpdate(req.params.id, req.body, { new: true });
-      if (!listing) return res.status(404).json({ error: "Apartment not found" });
+      const { lat, lng, ...rest } = req.body;
+
+      const update = { ...rest };
+
+      if (lat !== undefined && lng !== undefined) {
+        update.location = {
+          type: "Point",
+          coordinates: [Number(lng), Number(lat)], // [lng, lat]
+        };
+      }
+
+      const listing = await Listing.findByIdAndUpdate(
+        req.params.id,
+        update,
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+
+      if (!listing) {
+        return res.status(404).json({ error: "Apartment not found" });
+      }
+
       res.json(listing);
     } catch (error) {
+      console.error("Failed to update listing:", error);
       res.status(500).json({ error: "Failed to update listing" });
     }
   });

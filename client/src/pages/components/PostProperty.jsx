@@ -1,18 +1,37 @@
-import { ArrowRight, Building2, Camera, ChevronRight, Inbox, Lightbulb, MapPin, MessageSquare, PlusCircle, Rocket, Settings, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { PlusCircle, Building2, Inbox, Settings, Users, Lightbulb, ArrowRight, MapPin, Camera, Rocket, ChevronRight, MessageSquare, Search } from "lucide-react";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Fix for default marker icon in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
+const ChangeView = ({ center }) => {
+  const map = useMap();
+  map.setView(center, 15);
+  return null;
+};
 
 const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
   const [listings, setListings] = useState([]);
-  const [unreadCount] = useState(3);
+  const [messages, setMessages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
   const [errors, setErrors] = useState({});
   const [uploadedImages, setUploadedImages] = useState([]);
+  const [mapCenter, setMapCenter] = useState([34.022499, -118.285126]); // Default to USC Campus
   
   const [formData, setFormData] = useState({
     title: "",
     address: "",
-    lat: "",
-    lng: "",
+    lat: 34.022499,
+    lng: -118.285126,
     price: "",
     availableFrom: "",
     bedrooms: "1 Bedroom",
@@ -21,7 +40,14 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5001/api/apartments").then(res => res.json()).then(setListings);
+    fetch("http://localhost:5001/api/apartments").then(res => res.json()).then(data => {
+      const sorted = [...data].sort((a, b) => b.id - a.id);
+      setListings(sorted);
+    });
+    fetch("/api/messages").then(res => res.json()).then(data => {
+      const sorted = [...data].sort((a, b) => b.id - a.id);
+      setMessages(sorted);
+    });
   }, []);
 
   const handleInputChange = (e) => {
@@ -45,6 +71,39 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
     }));
   };
 
+  const handleGeocode = async () => {
+    if (!formData.address.trim()) {
+      setErrors(prev => ({ ...prev, address: "Please enter an address first" }));
+      return;
+    }
+
+    setIsGeocoding(true);
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(formData.address)}`);
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        const newLat = parseFloat(lat);
+        const newLng = parseFloat(lon);
+        setFormData(prev => ({ ...prev, lat: newLat, lng: newLng }));
+        setMapCenter([newLat, newLng]);
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.address;
+          return newErrors;
+        });
+      } else {
+        setErrors(prev => ({ ...prev, address: "Could not find this address. Please be more specific." }));
+      }
+    } catch (err) {
+      console.error("Geocoding error:", err);
+      setErrors(prev => ({ ...prev, address: "Error verifying address. Please try again." }));
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length + uploadedImages.length > 10) {
@@ -53,12 +112,12 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
     }
 
     files.forEach(file => {
-       const reader = new FileReader();
-       reader.onloadend = () => {
-         setUploadedImages(prev => [...prev, reader.result]);
-       };
-       reader.readAsDataURL(file);
-     });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadedImages(prev => [...prev, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const validateForm = () => {
@@ -85,8 +144,8 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
       const payload = {
         ...formData,
         price: parseInt(formData.price),
-        lat: !isNaN(latVal) ? latVal : 40.8075, // Default to campus if empty or invalid
-        lng: !isNaN(lngVal) ? lngVal : -73.9626,
+        lat: !isNaN(latVal) ? latVal : 34.022499,
+        lng: !isNaN(lngVal) ? lngVal : -118.285126,
         bedrooms: formData.bedrooms === "Studio" ? 0 : parseInt(formData.bedrooms),
         bathrooms: parseFloat(formData.bathrooms),
         image_url: uploadedImages[0],
@@ -94,7 +153,7 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
         distance: "0.5 mi to Campus", // Mock distance
         owner: {
           name: "Alex Johnson",
-          avatar: "https://picsum.photos/seed/lister/100/100"
+          avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80"
         }
       };
 
@@ -104,12 +163,16 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
         body: JSON.stringify(payload)
       });
 
-      if (response.ok) {
-        const newListing = await response.json();
-        setListings(prev => [newListing, ...prev]);
-        alert("Listing published successfully!");
-        navigateToDashboard("listings");
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        console.error("Failed to publish listing:", result);
+        alert(result?.error || result?.message || "Failed to publish listing.");
+        return;
       }
+
+      setListings(prev => [result, ...prev]);
+      navigateToDashboard("listings");
     } catch (err) {
       console.error("Failed to publish listing:", err);
       alert("Failed to publish listing. Please try again.");
@@ -119,7 +182,7 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
   };
 
   return (
-    <main className="max-w-[1440px] mx-auto px-6 py-8 overflow-y-auto">
+    <main className="max-w-[1440px] mx-auto px-6 py-8 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
       <div className="grid grid-cols-12 gap-8">
         <aside className="col-span-12 lg:col-span-3 space-y-6">
           <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-4">
@@ -134,7 +197,7 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
               </button>
               <button onClick={() => navigateToDashboard("messages")} className="flex w-full items-center gap-3 px-3 py-2.5 text-slate-400 hover:bg-slate-800 rounded-xl transition-all">
                 <Inbox size={20} /> Lead Inbox
-                <span className="ml-auto bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">{unreadCount} New</span>
+                <span className="ml-auto bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">{messages.filter(m => m.unread).length || 3} New</span>
               </button>
               <button className="flex w-full items-center gap-3 px-3 py-2.5 text-slate-400 hover:bg-slate-800 rounded-xl transition-all">
                 <Settings size={20} /> Lister Settings
@@ -194,44 +257,41 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-semibold text-slate-300">Address</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-3.5 text-slate-400" size={20} />
-                      <input 
-                        name="address"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                        className={`w-full bg-slate-800/50 border ${errors.address ? 'border-red-500' : 'border-slate-700'} rounded-xl focus:ring-primary focus:border-primary pl-10 pr-4 py-3 placeholder:text-slate-400`} 
-                        placeholder="Enter full property address" 
-                        type="text"
-                      />
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <MapPin className="absolute left-3 top-3.5 text-slate-400" size={20} />
+                        <input 
+                          name="address"
+                          value={formData.address}
+                          onChange={handleInputChange}
+                          className={`w-full bg-slate-800/50 border ${errors.address ? 'border-red-500' : 'border-slate-700'} rounded-xl focus:ring-primary focus:border-primary pl-10 pr-4 py-3 placeholder:text-slate-400`} 
+                          placeholder="Enter full property address" 
+                          type="text"
+                        />
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={handleGeocode}
+                        disabled={isGeocoding}
+                        className="bg-slate-800 hover:bg-slate-700 text-white px-4 rounded-xl flex items-center gap-2 transition-colors disabled:opacity-50"
+                      >
+                        {isGeocoding ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : <Search size={18} />}
+                        Verify
+                      </button>
                     </div>
                     {errors.address && <span className="text-xs text-red-500">{errors.address}</span>}
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-sm font-semibold text-slate-300">Latitude</label>
-                      <input 
-                        name="lat"
-                        value={formData.lat}
-                        onChange={handleInputChange}
-                        className="w-full bg-slate-800/50 border border-slate-700 rounded-xl focus:ring-primary focus:border-primary px-4 py-3 placeholder:text-slate-400" 
-                        placeholder="e.g. 40.8090" 
-                        type="number"
-                        step="any"
+
+                  {/* Map Preview */}
+                  <div className="h-48 w-full rounded-xl overflow-hidden border border-slate-800 bg-slate-900 z-0">
+                    <MapContainer center={mapCenter} zoom={15} style={{ height: "100%", width: "100%" }} zoomControl={false}>
+                      <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                       />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-sm font-semibold text-slate-300">Longitude</label>
-                      <input 
-                        name="lng"
-                        value={formData.lng}
-                        onChange={handleInputChange}
-                        className="w-full bg-slate-800/50 border border-slate-700 rounded-xl focus:ring-primary focus:border-primary px-4 py-3 placeholder:text-slate-400" 
-                        placeholder="e.g. -73.9620" 
-                        type="number"
-                        step="any"
-                      />
-                    </div>
+                      <Marker position={[formData.lat, formData.lng]} />
+                      <ChangeView center={[formData.lat, formData.lng]} />
+                    </MapContainer>
                   </div>
                 </div>
               </div>
@@ -382,9 +442,9 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
             </div>
             <div className="p-2 space-y-1">
               {listings.slice(0, 3).map(listing => (
-                <div key={listing._id} onClick={() => navigateToDashboard("listings")} className="p-3 hover:bg-slate-800 rounded-xl flex items-center gap-3 transition-all cursor-pointer">
+                <div key={listing.id} onClick={() => navigateToDashboard("listings")} className="p-3 hover:bg-slate-800 rounded-xl flex items-center gap-3 transition-all cursor-pointer">
                   <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                    <img className="w-full h-full object-cover"  src={listing.image_url || listing.images?.[0] || "https://via.placeholder.com/100"} alt={listing.title} referrerPolicy="no-referrer" />
+                    <img className="w-full h-full object-cover" src={listing.image_url} alt={listing.title} referrerPolicy="no-referrer" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold truncate">{listing.title}</p>
@@ -404,14 +464,22 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
               <h3 className="font-bold flex items-center gap-2">
                 <MessageSquare className="text-primary" size={20} /> Lead Inbox
               </h3>
-              <span className="ml-auto bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">{unreadCount} New</span>
             </div>
-            <div className="p-4 text-center">
-              <p className="text-xs text-slate-400 mb-3">Check your message inbox for the latest lead inquiries.</p>
-              <button onClick={() => navigateToDashboard("messages")} className="w-full py-2 text-xs font-bold bg-primary/10 text-primary rounded-lg border border-primary/30 hover:bg-primary/20 transition-colors">
-                View All Messages
-              </button>
+            <div className="divide-y divide-slate-800">
+              {messages.slice(0, 3).map(msg => (
+                <div key={msg.id} onClick={() => navigateToDashboard("messages")} className="p-4 hover:bg-slate-800/50 transition-all cursor-pointer">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-sm font-bold text-primary">{msg.sender}</p>
+                    <span className="text-[10px] text-slate-400">{msg.time}</span>
+                  </div>
+                  <p className="text-xs font-semibold text-slate-300 mb-1">Message from {msg.sender}</p>
+                  <p className="text-xs text-slate-500 line-clamp-1 italic">"{msg.text}"</p>
+                </div>
+              ))}
             </div>
+            <button onClick={() => navigateToDashboard("messages")} className="w-full py-3 text-xs font-bold text-slate-400 border-t border-slate-800 hover:text-primary transition-colors">
+              Go to Messages
+            </button>
           </div>
         </aside>
       </div>
