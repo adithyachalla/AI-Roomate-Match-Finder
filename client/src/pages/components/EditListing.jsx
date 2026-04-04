@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Camera, Rocket, Save, Search, X } from "lucide-react";
+import { ArrowLeft, MapPin, Camera, Rocket, Save, Search, X, Trash2 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -22,6 +22,7 @@ const EditListing = ({ listingId, onBack, onSave }) => {
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [mapCenter, setMapCenter] = useState([34.022499, -118.285126]);
   const [formData, setFormData] = useState({
@@ -120,6 +121,31 @@ const EditListing = ({ listingId, onBack, onSave }) => {
       console.error("Geocoding error:", err);
     } finally {
       setIsGeocoding(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this listing? This action cannot be undone.")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`http://localhost:5001/api/apartments/${listingId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => null);
+        throw new Error(result?.error || "Failed to delete listing");
+      }
+
+      onSave(); // Refresh the list and go back
+    } catch (err) {
+      console.error("Failed to delete listing:", err);
+      alert(err.message || "Failed to delete listing. Please try again.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -378,18 +404,27 @@ const EditListing = ({ listingId, onBack, onSave }) => {
             </div>
           </div>
 
-          <div className="pt-4 flex gap-4">
+          <div className="pt-4 flex flex-col sm:flex-row gap-4">
             <button 
               type="button"
               onClick={onBack}
-              className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 rounded-xl transition-all"
+              className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 rounded-xl transition-all order-2 sm:order-1"
             >
               Cancel
             </button>
             <button 
+              type="button"
+              onClick={handleDelete}
+              disabled={isDeleting || saving}
+              className="flex-1 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 order-3 sm:order-2"
+            >
+              {isDeleting ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div> : <Trash2 size={20} />}
+              Delete Listing
+            </button>
+            <button 
               type="submit"
-              disabled={saving}
-              className="flex-[2] bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              disabled={saving || isDeleting}
+              className="flex-[2] bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 order-1 sm:order-3"
             >
               {saving ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <Save size={20} />}
               Update Listing
