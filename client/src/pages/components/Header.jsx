@@ -82,7 +82,6 @@ const Header = ({ activeTab, setActiveTab, onLogout, onEditProfile, showEditProf
               ✏️ Edit Profile
             </button>
           )}
-          <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8 md:size-10 border-2 border-primary/20" style={{ backgroundImage: 'url("https://picsum.photos/seed/user/100/100")' }}></div>
           <button
             onClick={handleSwitchRole}
             className="hidden md:block px-3 py-2 bg-primary text-white rounded-xl text-sm font-bold shadow-md hover:scale-[1.02] transition"
