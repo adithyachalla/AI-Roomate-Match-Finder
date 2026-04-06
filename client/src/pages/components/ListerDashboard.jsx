@@ -62,7 +62,6 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
   const stats = [
     { label: "Total Views", value: "2,481", change: "+12%", color: "accent-teal", icon: TrendingUp },
     { label: "Active Inquiries", value: "42", change: "+5%", color: "primary", icon: MessageSquare },
-    { label: "Sync Score Avg.", value: "94%", change: "0%", color: "accent-teal", icon: Target },
     { label: "Listing Strength", value: "Great", change: "-2%", color: "primary", icon: Trophy },
   ];
 
