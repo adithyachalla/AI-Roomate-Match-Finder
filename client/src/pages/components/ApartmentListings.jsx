@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Search, ChevronDown, MapPin } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import ApartmentCard from "./ApartmentCard";
 
@@ -95,6 +95,33 @@ const ApartmentListings = ({ onViewDetail }) => {
     setSelectedAmenities(prev => 
       prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
     );
+  };
+
+  const mapCenter = useMemo(() => {
+    const coords = filteredApartments
+      .map(apt => apt.location?.coordinates)
+      .filter(Boolean)
+      .map(([lng, lat]) => [lat, lng]);
+
+    if (coords.length === 0) {
+      return [34.0224, -118.2851];
+    }
+
+    const avgLat = coords.reduce((sum, [lat]) => sum + lat, 0) / coords.length;
+    const avgLng = coords.reduce((sum, [, lng]) => sum + lng, 0) / coords.length;
+    return [avgLat, avgLng];
+  }, [filteredApartments]);
+
+  const MapUpdater = ({ center }) => {
+    const map = useMap();
+
+    useEffect(() => {
+      if (center) {
+        map.setView(center, map.getZoom());
+      }
+    }, [center, map]);
+
+    return null;
   };
 
   return (
@@ -283,7 +310,7 @@ const ApartmentListings = ({ onViewDetail }) => {
         `}>
             <MapContainer 
               className="relative z-0"
-              center={[34.0224, -118.2851]}
+              center={mapCenter}
               zoom={14}
               scrollWheelZoom={true}
               style={{ height: "100%", width: "100%" }}
@@ -292,12 +319,13 @@ const ApartmentListings = ({ onViewDetail }) => {
                 url="https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
               />
+              <MapUpdater center={mapCenter} />
             {filteredApartments.map((apt) => {
               const coords = apt.location?.coordinates;
               const lat = coords?.[1];
               const lng = coords?.[0];
 
-              if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+              if (lat === undefined || lng === undefined || isNaN(lat) || isNaN(lng)) {
                 return null;
               }
 
