@@ -219,10 +219,6 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
                 <Building2 size={20} /> My Listings
                 <span className="ml-auto bg-slate-800 text-[10px] px-2 py-0.5 rounded-full">{listings.length}</span>
               </button>
-              <button onClick={() => navigateToDashboard("messages")} className="flex w-full items-center gap-3 px-3 py-2.5 text-slate-400 hover:bg-slate-800 rounded-xl transition-all">
-                <Inbox size={20} /> Lead Inbox
-                <span className="ml-auto bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">{messages.filter(m => m.unread).length || 3} New</span>
-              </button>
               <button className="flex w-full items-center gap-3 px-3 py-2.5 text-slate-400 hover:bg-slate-800 rounded-xl transition-all">
                 <Settings size={20} /> Lister Settings
               </button>
@@ -483,28 +479,7 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
             </button>
           </div>
 
-          <div className="bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-              <h3 className="font-bold flex items-center gap-2">
-                <MessageSquare className="text-primary" size={20} /> Lead Inbox
-              </h3>
-            </div>
-            <div className="divide-y divide-slate-800">
-              {messages.slice(0, 3).map(msg => (
-                <div key={msg.id} onClick={() => navigateToDashboard("messages")} className="p-4 hover:bg-slate-800/50 transition-all cursor-pointer">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-bold text-primary">{msg.sender}</p>
-                    <span className="text-[10px] text-slate-400">{msg.time}</span>
-                  </div>
-                  <p className="text-xs font-semibold text-slate-300 mb-1">Message from {msg.sender}</p>
-                  <p className="text-xs text-slate-500 line-clamp-1 italic">"{msg.text}"</p>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => navigateToDashboard("messages")} className="w-full py-3 text-xs font-bold text-slate-400 border-t border-slate-800 hover:text-primary transition-colors">
-              Go to Messages
-            </button>
-          </div>
+
         </aside>
       </div>
     </main>
