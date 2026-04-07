@@ -79,13 +79,6 @@ const ApartmentCard = ({ apartment, onClick }) => {
           </>
         )}
 
-        {apartment.is_ai_match && (
-          <div className="absolute top-4 left-4">
-            <span className="bg-primary text-white text-[10px] font-extrabold uppercase tracking-widest px-2 py-1 rounded-full flex items-center gap-1">
-              <Sparkles size={14} /> Highly Compatible
-            </span>
-          </div>
-        )}
         <button 
           onClick={(e) => { e.stopPropagation(); }}
           className="absolute top-4 right-4 bg-white/20 backdrop-blur-md rounded-full size-8 flex items-center justify-center text-white hover:bg-white/40 transition-colors"

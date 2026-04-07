@@ -84,12 +84,8 @@ const ApartmentListings = ({ onViewDetail }) => {
     if (sortBy === "Cheapest") {
       result.sort((a, b) => a.price - b.price);
     } else if (sortBy === "Best Match") {
-      // For Best Match, we prioritize AI matches and then maybe views or just default order
-      result.sort((a, b) => {
-        if (a.is_ai_match && !b.is_ai_match) return -1;
-        if (!a.is_ai_match && b.is_ai_match) return 1;
-        return 0;
-      });
+      // For Best Match, maintain default order
+      result.sort((a, b) => 0);
     }
 
     setFilteredApartments(result);
