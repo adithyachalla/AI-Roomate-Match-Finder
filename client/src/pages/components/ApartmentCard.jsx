@@ -95,9 +95,9 @@ const ApartmentCard = ({ apartment, onClick }) => {
           <div className="text-right">
             <div className="flex items-center gap-1 text-primary">
               <Users size={18} />
-              <span className="text-sm font-bold">5 Top Matches</span>
+              <span className="text-sm font-bold">{apartment.matches || 0} {apartment.matches === 1 ? 'Person' : 'People'}</span>
             </div>
-            <p className="text-[11px] text-slate-500 uppercase font-bold mt-1">Interested here</p>
+            <p className="text-[11px] text-slate-500 uppercase font-bold mt-1">Looking</p>
           </div>
         </div>
         <div className="flex gap-3 md:gap-4 mb-4 text-xs md:text-sm text-slate-600 dark:text-slate-300">
