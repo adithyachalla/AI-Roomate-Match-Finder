@@ -1,16 +1,14 @@
-import { BarChart3, Building2, LayoutDashboard, Menu, MessageSquare, Plus as PlusIcon, RefreshCw, Settings, Sparkles, Target, TrendingUp, Trophy, Users, X } from "lucide-react";
+import { BarChart3, Building2, LayoutDashboard, Menu, MessageSquare, Plus as PlusIcon, RefreshCw, Settings, Sparkles, TrendingUp, Trophy, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import EditListing from "./EditListing";
 import { ListerMessagesTab } from "./ListerMessagesTab";
 
 const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetail, selectedOwnerId, selectedOwnerName }) => {
   const [listings, setListings] = useState([]);
-  const [roommates, setRoommates] = useState([]);
   const [tenantMatches, setTenantMatches] = useState([]);
   const [subTab, setSubTab] = useState(initialSubTab);
   const [editingListingId, setEditingListingId] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [user, setUser] = useState({});
 
   const fetchListings = () => {
     fetch("http://localhost:5001/api/apartments").then(res => res.json()).then(setListings);
@@ -22,7 +20,6 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
 
   useEffect(() => {
     fetchListings();
-    fetch("http://localhost:5001/api/roommates").then(res => res.json()).then(setRoommates);
     fetch("http://localhost:5001/api/tenant-matches").then(res => res.json()).then(setTenantMatches);
   }, []);
 
@@ -170,7 +167,7 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
           {subTab === "overview" && (
             <>
               {/* Stats Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {stats.map((stat, i) => (
                   <div key={i} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
                     <div className="flex justify-between items-start mb-4">
@@ -187,102 +184,65 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Recent Listings Table */}
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold text-white">Recent Listings</h3>
-                    <button onClick={() => handleSubTabChange("listings")} className="text-accent-teal text-sm font-bold hover:underline">View All</button>
-                  </div>
-                  <div className="bg-slate-900/50 rounded-2xl border border-slate-800 overflow-hidden overflow-x-auto">
-                    <table className="w-full text-left min-w-[500px]">
-                      <thead className="bg-slate-800/50 border-b border-slate-800">
-                        <tr>
-                          <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Property</th>
-                          <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Status</th>
-                          <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Matches</th>
-                          <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500 text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-800">
-                        {listings.slice(0, 3).map(listing => (
-                          <tr key={listing._id} className="cursor-pointer hover:bg-slate-800/30 transition-colors" onClick={() => onViewDetail(listing._id)}>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-lg bg-slate-800 overflow-hidden shrink-0">
-                                  <img alt="Property" className="w-full h-full object-cover" src={listing.images?.[0]} />
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="font-bold text-sm text-white truncate">{listing.title}</p>
-                                  <p className="text-xs text-slate-500 truncate">{listing.address}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded ${listing.status === 'Active' ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                                {listing.status || 'Active'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex -space-x-2">
-                                {[1, 2].map(n => (
-                                  <div key={n} className="w-6 h-6 rounded-full border-2 border-slate-900 bg-slate-300 overflow-hidden">
-                                    <img src={`https://images.unsplash.com/photo-${n === 1 ? '1500648767791-00dcc994a43e' : '1438761681033-6461ffad8d80'}?auto=format&fit=crop&w=50&q=80`} alt="User" />
-                                  </div>
-                                ))}
-                                <div className="w-6 h-6 rounded-full border-2 border-slate-900 bg-accent-teal flex items-center justify-center text-[8px] font-bold text-navy-dark">+{listing.matches || 0}</div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // Refresh logic or similar
-                                }}
-                                className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-accent-teal transition-colors"
-                              >
-                                <RefreshCw size={16} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+              {/* Recent Listings */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white">Recent Listings</h3>
+                  <button onClick={() => handleSubTabChange("listings")} className="text-accent-teal text-sm font-bold hover:underline">View All</button>
                 </div>
-
-                {/* Top AI Matches */}
-                <div className="space-y-6">
-                  <h3 className="text-xl font-bold text-white">Top AI Matches</h3>
-                  <div className="bg-gradient-to-br from-primary to-navy-dark p-6 rounded-2xl border border-primary/30 relative overflow-hidden">
-                    <div className="absolute -top-12 -right-12 w-32 h-32 bg-accent-teal/10 rounded-full blur-3xl"></div>
-                    <div className="relative space-y-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                          <span className="text-[10px] text-accent-teal font-bold uppercase tracking-widest">High Compatibility</span>
-                        </div>
-                        <Sparkles size={20} className="text-accent-teal" />
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full border-2 border-accent-teal p-1">
-                          <img alt="Match" className="w-full h-full rounded-full bg-slate-800 object-cover" src={roommates[0]?.avatar_url || "https://picsum.photos/seed/sarah/100/100"} />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-white">{roommates[0]?.name || "Sarah Miller"}</h4>
-                          <div className="flex items-center gap-1 text-accent-teal">
-                            <Sparkles size={14} />
-                            <span className="text-sm font-extrabold">98% Sync Score</span>
-                          </div>
-                        </div>
-                      </div>
-                      <p className="text-slate-300 text-sm leading-relaxed">
-                        Sarah matches your preferences for a quiet, study-focused environment and shared utility goals.
-                      </p>
-                      <button className="w-full bg-accent-teal text-navy-dark font-bold py-3 rounded-xl hover:bg-accent-teal/90 transition-all">
-                        Connect Now
-                      </button>
-                    </div>
-                  </div>
+                <div className="bg-slate-900/50 rounded-2xl border border-slate-800 overflow-hidden overflow-x-auto">
+                  <table className="w-full text-left min-w-[500px]">
+                    <thead className="bg-slate-800/50 border-b border-slate-800">
+                      <tr>
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Property</th>
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Status</th>
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Matches</th>
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {listings.slice(0, 5).map(listing => (
+                        <tr key={listing._id} className="cursor-pointer hover:bg-slate-800/30 transition-colors" onClick={() => onViewDetail(listing._id)}>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-lg bg-slate-800 overflow-hidden shrink-0">
+                                <img alt="Property" className="w-full h-full object-cover" src={listing.images?.[0]} />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-sm text-white truncate">{listing.title}</p>
+                                <p className="text-xs text-slate-500 truncate">{listing.address}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded ${listing.status === 'Active' ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                              {listing.status || 'Active'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex -space-x-2">
+                              {[1, 2].map(n => (
+                                <div key={n} className="w-6 h-6 rounded-full border-2 border-slate-900 bg-slate-300 overflow-hidden">
+                                  <img src={`https://images.unsplash.com/photo-${n === 1 ? '1500648767791-00dcc994a43e' : '1438761681033-6461ffad8d80'}?auto=format&fit=crop&w=50&q=80`} alt="User" />
+                                </div>
+                              ))}
+                              <div className="w-6 h-6 rounded-full border-2 border-slate-900 bg-accent-teal flex items-center justify-center text-[8px] font-bold text-navy-dark">+{listing.matches || 0}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                              className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-accent-teal transition-colors"
+                            >
+                              <RefreshCw size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </>
