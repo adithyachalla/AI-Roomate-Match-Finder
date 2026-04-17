@@ -60,21 +60,32 @@ export default function Login() {
         return;
       }
 
-      // success -> OTP sent. store pendingEmail and navigate to OTP verify page
+      // Verified user — backend returned JWT directly (no OTP needed)
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", "student");
+        if (data.user) {
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              _id: data.user._id,
+              username: data.user.username,
+              fullname: data.user.fullname,
+              email: data.user.email
+            })
+          );
+        }
+        navigate("/student-dashboard");
+        return;
+      }
+
+      // Unverified user — OTP sent, navigate to verification page
       if (data.message === "otp_sent") {
         localStorage.setItem("pendingEmail", emailTrim);
         localStorage.setItem("isNewUser", "false");
         localStorage.setItem("role", "student");
-        
-        navigate("/otp-verify");
-        return;
-      }
 
-      // fallback: if backend returned token directly (unlikely for login), store it
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("role", "student");
-        navigate("/student-dashboard");
+        navigate("/otp-verify");
         return;
       }
 
