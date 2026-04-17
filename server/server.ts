@@ -15,6 +15,7 @@ import authRoutes from "./routes/auth.js";
 import messagesRoutes from "./routes/messages.js";
 import userRoutes from "./routes/userRoutes.js";
 import Profile from "./models/Profile.js";
+import { Message } from "./models/Message.js";
 
 // ESM-safe __filename / __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -143,6 +144,24 @@ async function startServer() {
     }
   });
 
+  // POST increment view count for a listing
+  app.post("/api/apartments/:id/views", async (req, res) => {
+    try {
+      const listing = await Listing.findByIdAndUpdate(
+        req.params.id,
+        { $inc: { views: 1 } },
+        { new: true, runValidators: true }
+      );
+
+      if (!listing) return res.status(404).json({ error: "Apartment not found" });
+
+      res.json(listing);
+    } catch (error) {
+      console.error("Failed to increment listing views:", error);
+      res.status(500).json({ error: "Failed to increment listing views" });
+    }
+  });
+
   // POST create new listing
   app.post("/api/apartments", async (req, res) => {
     try {
@@ -173,6 +192,10 @@ async function startServer() {
         name: profile.fullname,
         avatar: profile.profilePic || "",
       };
+
+      body.views = body.views ?? 0;
+      body.matches = body.matches ?? 0;
+      body.status = body.status || "Active";
 
       const listing = await Listing.create(body);
       return res.status(201).json(listing);
@@ -224,6 +247,120 @@ async function startServer() {
       res.json({ message: "Listing deleted successfully" });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete listing" });
+    }
+  });
+
+  // ─── ANALYTICS ROUTES ───────────────────────────────────────────────────
+
+  // GET overview stats for a lister
+  app.get("/api/analytics/overview/:ownerId", async (req, res) => {
+    try {
+      const { ownerId } = req.params;
+
+      // Total Views: sum of views for all listings
+      const listings = await Listing.find({ ownerId });
+      const totalViews = listings.reduce((sum, listing) => sum + (listing.views || 0), 0);
+
+      // Active Inquiries: count of unread messages where recipient is the owner
+      const activeInquiries = await Message.countDocuments({ recipientId: ownerId, read: false });
+
+      // Listing Strength: calculate based on listing completeness (simple score)
+      const avgStrength = listings.length > 0 
+        ? listings.reduce((sum, listing) => {
+            let score = 0;
+            if (listing.title) score += 20;
+            if (listing.description) score += 20;
+            if (listing.images && listing.images.length > 0) score += 20;
+            if (listing.amenities && listing.amenities.length > 0) score += 20;
+            if (listing.price) score += 20;
+            return sum + score;
+          }, 0) / listings.length
+        : 0;
+
+      const listingStrength = avgStrength >= 80 ? "Great" : avgStrength >= 60 ? "Good" : "Needs Improvement";
+
+      res.json({
+        totalViews,
+        activeInquiries,
+        listingStrength,
+        changeViews: "+12%", // Mock change
+        changeInquiries: "+5%", // Mock change
+        changeStrength: "-2%" // Mock change
+      });
+    } catch (error) {
+      console.error("Analytics overview error:", error);
+      res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  // GET detailed analytics for a lister
+  app.get("/api/analytics/detailed/:ownerId", async (req, res) => {
+    try {
+      const { ownerId } = req.params;
+
+      // Get all listings for this owner
+      const listings = await Listing.find({ ownerId });
+
+      // Calculate Views Over Time based on real listing data
+      const now = new Date();
+      const months = [];
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({
+          month: date.toLocaleString('default', { month: 'short' }),
+          year: date.getFullYear(),
+          date: date,
+          views: 0
+        });
+      }
+
+      // Distribute views based on listing creation dates
+      listings.forEach(listing => {
+        const createdAt = new Date(listing.createdAt || now);
+        const views = listing.views || 0;
+        
+        if (views > 0) {
+          // Calculate how many months the listing has been active
+          const monthsActive = Math.max(1, Math.ceil((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24 * 30)));
+          
+          // Distribute views across the active months, with more weight on recent months
+          for (let i = 0; i < monthsActive && i < 12; i++) {
+            const monthIndex = 11 - i; // Start from most recent
+            if (monthIndex >= 0) {
+              const weight = Math.max(0.1, 1 - (i * 0.1)); // Recent months get more weight
+              months[monthIndex].views += Math.round((views / monthsActive) * weight);
+            }
+          }
+        }
+      });
+
+      const viewsOverTime = months.map(m => ({ month: m.month, views: m.views }));
+
+      // Lead Sources: Keep mock data for now (would need additional tracking)
+      const leadSources = [
+        { label: "Direct Search", value: 45 },
+        { label: "Social Media", value: 30 },
+        { label: "University Portals", value: 15 },
+        { label: "Referrals", value: 10 }
+      ];
+
+      // Additional real stats
+      const totalListings = listings.length;
+      const activeListings = listings.filter(l => l.status === 'Active').length;
+      const totalMatches = listings.reduce((sum, l) => sum + (l.matches || 0), 0);
+      const totalViews = listings.reduce((sum, l) => sum + (l.views || 0), 0);
+
+      res.json({
+        viewsOverTime,
+        leadSources,
+        totalListings,
+        activeListings,
+        totalMatches,
+        totalViews
+      });
+    } catch (error) {
+      console.error("Analytics detailed error:", error);
+      res.status(500).json({ error: "Failed to fetch detailed analytics" });
     }
   });
 
