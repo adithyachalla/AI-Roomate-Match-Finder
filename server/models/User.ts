@@ -7,6 +7,8 @@ export interface IUser extends Document {
   username: string;
   fullname: string;
 
+  isVerified: boolean;
+
   otpHash?: string | null;
   otpSalt?: string | null;
   otpExpiresAt?: Date | null;
@@ -40,6 +42,8 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: true
     },
+
+    isVerified: { type: Boolean, default: false },
 
     otpHash: { type: String, default: null },
     otpSalt: { type: String, default: null },

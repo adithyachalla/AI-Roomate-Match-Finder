@@ -72,6 +72,22 @@ export async function login(req: Request, res: Response) {
     const match = await bcrypt.compare(password, user.passwordHash);
     if (!match) return res.status(401).json({ message: "Invalid credentials" });
 
+    // If user has already verified their email, skip OTP and return JWT directly
+    if (user.isVerified) {
+      const token = jwt.sign({ sub: user._id.toString(), email: user.email }, JWT_SECRET, { expiresIn: "6h" });
+      return res.json({
+        message: "Login successful",
+        token,
+        user: {
+          _id: user._id,
+          username: user.username,
+          fullname: user.fullname,
+          email: user.email
+        }
+      });
+    }
+
+    // User not yet verified — send OTP for email verification
     // Remove previous OTPs for this user
     await Otp.deleteMany({ userId: user._id });
 
@@ -152,8 +168,9 @@ export async function verifyOtp(req: Request, res: Response) {
       return res.status(401).json({ message: "Invalid OTP" });
     }
 
-    // success: delete OTP docs and return JWT
+    // success: delete OTP docs, mark user as verified, and return JWT
     await Otp.deleteMany({ userId: user._id });
+    await User.findByIdAndUpdate(user._id, { isVerified: true });
 
     const token = jwt.sign({ sub: user._id.toString(), email: user.email }, JWT_SECRET, { expiresIn: "6h" });
     return res.json({
@@ -356,11 +373,12 @@ export async function seedDummyUsers() {
       if (!exists) {
         const salt = await bcrypt.genSalt(SALT_ROUNDS);
         const hash = await bcrypt.hash(u.password, salt);
-        await User.create({ 
-          email: u.email.toLowerCase(), 
+        await User.create({
+          email: u.email.toLowerCase(),
           username: u.username,
           fullname: u.fullname,
-          passwordHash: hash 
+          passwordHash: hash,
+          isVerified: true
         });
         console.log(`Seeded user ${u.email} / ${u.password}`);
       } else {
