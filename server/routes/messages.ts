@@ -29,7 +29,9 @@ router.post("/initiate", async (req, res) => {
     let conversation = await Conversation.findOne({ conversationId });
 
     if (conversation) {
-      // If already exists, return the existing conversation
+      // If already exists, populate and return the existing conversation
+      await conversation.populate("initiatorId", "fullname username profilePic");
+      await conversation.populate("recipientId", "fullname username profilePic");
       return res.json(conversation);
     }
 

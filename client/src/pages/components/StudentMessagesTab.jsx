@@ -29,11 +29,13 @@ export const StudentMessagesTab = ({ selectedOwner = null }) => {
     const initiator = conversation.initiatorId;
     const recipient = conversation.recipientId;
 
-    const initiatorId = initiator?._id || initiator;
-    const recipientId = recipient?._id || recipient;
+    // Extract IDs - handle both populated objects and string IDs
+    const initiatorId = typeof initiator === 'object' ? initiator?._id : initiator;
+    const recipientId = typeof recipient === 'object' ? recipient?._id : recipient;
 
     if (!initiatorId || !recipientId) return null;
 
+    // Return the full partner object
     return String(initiatorId) === String(currentUser._id) ? recipient : initiator;
   };
 
@@ -292,6 +294,14 @@ export const StudentMessagesTab = ({ selectedOwner = null }) => {
     ? selectedConversation.partnerInfo || getConversationPartner(selectedConversation)
     : null;
 
+  // Helper to safely get partner name
+  const getPartnerName = (partner) => {
+    if (!partner) return "Unknown";
+    if (typeof partner === 'object' && partner.fullname) return partner.fullname;
+    if (typeof partner === 'string') return "Unknown";
+    return "Unknown";
+  };
+
   // Log conversations for debugging
   useEffect(() => {
     console.log("Conversations loaded:", {
@@ -494,7 +504,7 @@ export const StudentMessagesTab = ({ selectedOwner = null }) => {
             {/* Status Banner */}
             {selectedConversation.status === "pending" && (
               <div className="bg-yellow-500/10 border-b border-yellow-500/30 px-4 py-3 text-sm text-yellow-400">
-                ⏳ Waiting for {selectedPartner?.fullname || "them"} to accept your message request
+                ⏳ Waiting for {getPartnerName(selectedPartner)} to accept your message request
               </div>
             )}
 
@@ -514,11 +524,13 @@ export const StudentMessagesTab = ({ selectedOwner = null }) => {
                   <X size={20} />
                 </button>
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                  {selectedPartner?.fullname?.charAt(0) || "?"}
+                  {selectedPartner && typeof selectedPartner === 'object' && selectedPartner.fullname
+                    ? selectedPartner.fullname.charAt(0)
+                    : "?"}
                 </div>
                 <div>
                   <h4 className="font-bold text-white">
-                    {selectedPartner?.fullname || "Unknown"}
+                    {getPartnerName(selectedPartner)}
                   </h4>
                   <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest">
                     Online
@@ -546,8 +558,8 @@ export const StudentMessagesTab = ({ selectedOwner = null }) => {
                   </p>
                   <p className="text-sm text-slate-500">
                     {selectedConversation?.status === "pending"
-                      ? `${selectedPartner?.fullname || "This user"} hasn't accepted your message request yet`
-                      : `${selectedPartner?.fullname || "This user"} rejected your message request`}
+                      ? `${getPartnerName(selectedPartner)} hasn't accepted your message request yet`
+                      : `${getPartnerName(selectedPartner)} rejected your message request`}
                   </p>
                 </div>
               </div>
