@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
 import ApartmentListings from "./components/ApartmentListings";
 import PropertyDetail from "./components/PropertyDetail";
 import { StudentMessagesTab } from "./components/StudentMessagesTab";
@@ -14,6 +15,8 @@ export default function StudentDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
   const [selectedOwner, setSelectedOwner] = useState(null);
+  const [savedProfiles, setSavedProfiles] = useState([]);
+  const [loadingSavedProfiles, setLoadingSavedProfiles] = useState(false);
 
   // Check if coming from roommate detail or property detail with state
   useEffect(() => {
@@ -55,6 +58,24 @@ export default function StudentDashboard() {
       })
       .finally(() => setLoadingProfiles(false));
   }, []);
+
+  // Fetch saved profiles when tab is selected
+  useEffect(() => {
+    if (activeTab === "savedProfiles") {
+      const stored = JSON.parse(localStorage.getItem("user"));
+      if (stored?._id) {
+        setLoadingSavedProfiles(true);
+        fetch(`http://localhost:5001/api/profile/saved/${stored._id}`)
+          .then(res => (res.ok ? res.json() : []))
+          .then(data => setSavedProfiles(Array.isArray(data) ? data : []))
+          .catch(err => {
+            console.error("Error fetching saved profiles:", err);
+            setSavedProfiles([]);
+          })
+          .finally(() => setLoadingSavedProfiles(false));
+      }
+    }
+  }, [activeTab]);
 
   const logout = () => {
     localStorage.clear();
@@ -136,6 +157,34 @@ export default function StudentDashboard() {
     setActiveTab("messages");
   };
 
+  const handleRemoveSavedProfile = async (profileId, e) => {
+    e.stopPropagation();
+    try {
+      const stored = JSON.parse(localStorage.getItem("user"));
+      const userId = stored?._id;
+
+      if (!userId) {
+        alert("Please log in first");
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5001/api/profile/unsave/${userId}/${profileId}`,
+        { method: "DELETE" }
+      );
+
+      if (response.ok) {
+        // Remove from local state
+        setSavedProfiles(prev => prev.filter(p => p._id !== profileId));
+      } else {
+        alert("Failed to remove saved profile");
+      }
+    } catch (error) {
+      console.error("Error removing saved profile:", error);
+      alert("Error: " + error.message);
+    }
+  };
+
   if (user === undefined) {
     return <div className="text-white p-10">Loading...</div>;
   }
@@ -175,7 +224,10 @@ export default function StudentDashboard() {
               Browse Roommates
             </button>
 
-            <button className="w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition">
+            <button 
+              onClick={() => setActiveTab("savedProfiles")}
+              className={`w-full text-left px-3 py-2 rounded-lg transition ${activeTab === "savedProfiles" ? "bg-primary/10 text-primary font-bold" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
+            >
               Saved Profiles
             </button>
 
@@ -380,6 +432,90 @@ export default function StudentDashboard() {
             ))}
           </div>
         )}
+          </>
+        )}
+
+        {activeTab === "savedProfiles" && (
+          <>
+            <h1 className="text-2xl font-bold mb-6">Saved Profiles</h1>
+            
+            {loadingSavedProfiles && (
+              <div className="text-slate-400 text-center py-8">
+                Loading saved profiles...
+              </div>
+            )}
+
+            {!loadingSavedProfiles && savedProfiles.length === 0 && (
+              <div className="bg-slate-800/50 border border-white/10 p-12 rounded-lg text-center">
+                <p className="text-slate-400 mb-2">No saved profiles yet</p>
+                <p className="text-sm text-slate-500">Go to Browse Roommates and click the heart icon to save profiles you like!</p>
+              </div>
+            )}
+
+            {!loadingSavedProfiles && savedProfiles.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {savedProfiles.map((profile, index) => (
+                  <div
+                    key={profile._id || index}
+                    className="bg-card-dark rounded-xl border border-white/10 p-4 hover:scale-[1.03] transition shadow-lg hover:border-primary/40 cursor-pointer relative group"
+                    onClick={() => navigate(`/roommate/${profile.userId}`, { state: { roommateId: profile.userId, roommateName: profile.fullname } })}
+                  >
+                    {/* Remove Button */}
+                    <button
+                      onClick={(e) => handleRemoveSavedProfile(profile._id, e)}
+                      className="absolute top-3 right-3 z-10 p-2 rounded-full bg-red-500/60 border border-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      title="Remove from saved"
+                    >
+                      <X size={18} />
+                    </button>
+
+                    {/* Avatar + Gradient */}
+                    <div className="h-40 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-indigo-500/30 via-purple-500/20 to-blue-500/30 overflow-hidden">
+                      <img
+                        src={profile.profilePic || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`}
+                        alt={profile.fullname}
+                        className="w-20 h-20 rounded-full bg-white object-cover"
+                      />
+                    </div>
+
+                    {/* Name */}
+                    <h3 className="font-bold text-lg mb-1 text-white">
+                      {profile.fullname || "User"}
+                    </h3>
+
+                    {/* Username */}
+                    <p className="text-xs text-slate-500 mb-2">
+                      @{profile.username || "user"}
+                    </p>
+
+                    {/* Bio */}
+                    <p className="text-sm text-slate-400 mb-3 line-clamp-2 min-h-[2.5rem]">
+                      {profile.bio || "No bio added"}
+                    </p>
+
+                    {/* Quick stats grid */}
+                    <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
+                      <div className="bg-white/5 p-2 rounded-lg border border-white/10">
+                        <p className="text-slate-500">Budget</p>
+                        <p className="font-bold text-white">${profile.livingPreferences?.budget || "N/A"}</p>
+                      </div>
+                      <div className="bg-white/5 p-2 rounded-lg border border-white/10">
+                        <p className="text-slate-500">Sleep</p>
+                        <p className="font-bold text-white capitalize">{profile.lifestyle?.sleep || "N/A"}</p>
+                      </div>
+                    </div>
+
+                    {/* Button */}
+                    <button 
+                      className="w-full bg-primary py-2 rounded-lg font-bold hover:opacity-90 transition text-white"
+                      onClick={() => navigate(`/roommate/${profile.userId}`, { state: { roommateId: profile.userId, roommateName: profile.fullname } })}
+                    >
+                      View Profile
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
 

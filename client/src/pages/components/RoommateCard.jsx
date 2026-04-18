@@ -1,7 +1,76 @@
 import { motion } from "framer-motion";
 import { Award, Heart, Moon, Users } from "lucide-react";
+import { useState } from "react";
 
-const RoommateCard = ({ profile, onClick }) => {
+const RoommateCard = ({ profile, onClick, onFavoriteToggle, isFavorited }) => {
+  const [isFavorite, setIsFavorite] = useState(isFavorited || false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleFavoriteClick = async (e) => {
+    e.stopPropagation();
+    setIsLoading(true);
+
+    try {
+      const stored = JSON.parse(localStorage.getItem("user"));
+      const userId = stored?._id;
+
+      if (!userId) {
+        console.error("User not logged in");
+        alert("Please log in first");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!profile._id) {
+        console.error("Profile ID missing:", profile);
+        alert("Error: Profile information missing");
+        setIsLoading(false);
+        return;
+      }
+
+      const endpoint = isFavorite
+        ? `http://localhost:5001/api/profile/unsave/${userId}/${profile._id}`
+        : `http://localhost:5001/api/profile/save/${userId}/${profile._id}`;
+
+      const method = isFavorite ? "DELETE" : "POST";
+
+      console.log(`${method} request to:`, endpoint);
+
+      const response = await fetch(endpoint, { method });
+
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = `API error: ${response.status}`;
+        
+        if (contentType?.includes("application/json")) {
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+          } catch (e) {
+            console.error("Failed to parse error JSON:", e);
+          }
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      console.log("Response:", data);
+
+      if (isFavorite) {
+        setIsFavorite(false);
+        if (onFavoriteToggle) onFavoriteToggle(profile._id, false);
+      } else {
+        setIsFavorite(true);
+        if (onFavoriteToggle) onFavoriteToggle(profile._id, true);
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <motion.div 
       layout
@@ -20,12 +89,15 @@ const RoommateCard = ({ profile, onClick }) => {
         
         {/* Like Button */}
         <button 
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          className="absolute top-3 right-3 z-10 p-2 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/60 hover:border-red-500"
+          onClick={handleFavoriteClick}
+          disabled={isLoading}
+          className={`absolute top-3 right-3 z-10 p-2 rounded-full backdrop-blur-md text-white border opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 ${
+            isFavorite 
+              ? 'bg-red-500/60 border-red-500' 
+              : 'bg-black/40 border-white/10 hover:bg-red-500/60 hover:border-red-500'
+          }`}
         >
-          <Heart size={18} />
+          <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
         </button>
       </div>
 

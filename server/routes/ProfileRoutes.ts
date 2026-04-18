@@ -105,27 +105,80 @@ router.post("/create", async (req, res) => {
   }
 });
 
-
-// ✅ GET PROFILE (SAFE FOR DASHBOARD)
-router.get("/:userId", async (req, res) => {
+// ✅ SAVE A PROFILE (ADD TO FAVORITES)
+// 🔥 THIS MUST COME BEFORE /:userId ROUTE
+router.post("/save/:userId/:profileIdToSave", async (req, res) => {
   try {
-    const profile = await Profile.findOne({ userId: req.params.userId });
+    const { userId, profileIdToSave } = req.params;
 
-    // return empty object instead of error
-    if (!profile) {
-      return res.json({});
+    // Find the user's profile
+    const userProfile = await Profile.findOne({ userId });
+    if (!userProfile) {
+      return res.status(404).json({ message: "User profile not found" });
     }
 
-    res.json(profile);
+    // Check if already saved
+    if (userProfile.savedProfiles.includes(profileIdToSave)) {
+      return res.status(400).json({ message: "Profile already saved" });
+    }
 
+    // Add to savedProfiles
+    userProfile.savedProfiles.push(profileIdToSave);
+    await userProfile.save();
+
+    res.json({ message: "Profile saved successfully", savedProfiles: userProfile.savedProfiles });
   } catch (err) {
-    console.error("GET PROFILE ERROR:", err);
+    console.error("SAVE PROFILE ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
+// ✅ UNSAVE A PROFILE (REMOVE FROM FAVORITES)
+// 🔥 THIS MUST COME BEFORE /:userId ROUTE
+router.delete("/unsave/:userId/:profileIdToUnsave", async (req, res) => {
+  try {
+    const { userId, profileIdToUnsave } = req.params;
+
+    // Find the user's profile
+    const userProfile = await Profile.findOne({ userId });
+    if (!userProfile) {
+      return res.status(404).json({ message: "User profile not found" });
+    }
+
+    // Remove from savedProfiles
+    userProfile.savedProfiles = userProfile.savedProfiles.filter(
+      id => id.toString() !== profileIdToUnsave
+    );
+    await userProfile.save();
+
+    res.json({ message: "Profile unsaved successfully", savedProfiles: userProfile.savedProfiles });
+  } catch (err) {
+    console.error("UNSAVE PROFILE ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ✅ GET ALL SAVED PROFILES FOR A USER
+// 🔥 THIS MUST COME BEFORE /:userId ROUTE
+router.get("/saved/:userId", async (req, res) => {
+  try {
+    const userProfile = await Profile.findOne({ userId: req.params.userId });
+    if (!userProfile) {
+      return res.status(404).json({ message: "User profile not found" });
+    }
+
+    // Get all saved profiles with full details
+    const savedProfiles = await Profile.find({ _id: { $in: userProfile.savedProfiles } });
+
+    res.json(savedProfiles);
+  } catch (err) {
+    console.error("GET SAVED PROFILES ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
 
 // ✅ UPDATE PROFILE (SAFE + CONTROLLED)
+// 🔥 THIS MUST COME BEFORE /:userId ROUTE
 router.put("/update/:userId", async (req, res) => {
   try {
     const {
@@ -162,6 +215,24 @@ router.put("/update/:userId", async (req, res) => {
 
   } catch (err) {
     console.error("UPDATE PROFILE ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ✅ GET PROFILE (GENERIC - MUST COME LAST)
+router.get("/:userId", async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ userId: req.params.userId });
+
+    // return empty object instead of error
+    if (!profile) {
+      return res.json({});
+    }
+
+    res.json(profile);
+
+  } catch (err) {
+    console.error("GET PROFILE ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 });

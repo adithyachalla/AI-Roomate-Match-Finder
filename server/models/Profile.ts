@@ -41,6 +41,12 @@ const profileSchema = new mongoose.Schema(
       neighborhoods: { type: [String], default: [] },
       moveIn: { type: String, default: "" },
       entireUnit: { type: Boolean, default: true }
+    },
+
+    savedProfiles: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Profile",
+      default: []
     }
   },
   { timestamps: true }

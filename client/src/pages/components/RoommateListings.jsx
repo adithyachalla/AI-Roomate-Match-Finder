@@ -21,14 +21,16 @@ const RoommateListings = ({ onViewDetail }) => {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [sortBy, setSortBy] = useState("Best Match");
   const [allNeighborhoods, setAllNeighborhoods] = useState([]);
+  const [savedProfileIds, setSavedProfileIds] = useState([]);
 
-  // Fetch all roommates
+  // Fetch all roommates and saved profiles
   useEffect(() => {
-    const fetchRoommates = async () => {
+    const fetchData = async () => {
       try {
         const stored = JSON.parse(localStorage.getItem("user"));
         const currentUserId = stored?._id;
 
+        // Fetch all roommates
         const response = await fetch("http://localhost:5001/api/profile");
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
@@ -36,7 +38,7 @@ const RoommateListings = ({ onViewDetail }) => {
         
         const data = await response.json();
         
-        // Filter out current user (userId may be ObjectId in JSON; compare as strings)
+        // Filter out current user
         const filteredData = data.filter(
           (profile) => String(profile.userId) !== String(currentUserId ?? "")
         );
@@ -52,15 +54,25 @@ const RoommateListings = ({ onViewDetail }) => {
           });
         });
         setAllNeighborhoods(Array.from(neighborhoods));
+
+        // Fetch saved profiles
+        if (currentUserId) {
+          const savedResponse = await fetch(`http://localhost:5001/api/profile/saved/${currentUserId}`);
+          if (savedResponse.ok) {
+            const savedProfiles = await savedResponse.json();
+            setSavedProfileIds(savedProfiles.map(p => p._id));
+          }
+        }
+
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching roommates:", err);
+        console.error("Error fetching data:", err);
         setError(err.message);
         setLoading(false);
       }
     };
 
-    fetchRoommates();
+    fetchData();
   }, []);
 
   // Apply filters
@@ -137,6 +149,14 @@ const RoommateListings = ({ onViewDetail }) => {
     setSelectedNeighborhoods(prev => 
       prev.includes(neighborhood) ? prev.filter(n => n !== neighborhood) : [...prev, neighborhood]
     );
+  };
+
+  const handleFavoriteToggle = (profileId, isFavorited) => {
+    if (isFavorited) {
+      setSavedProfileIds(prev => [...prev, profileId]);
+    } else {
+      setSavedProfileIds(prev => prev.filter(id => id !== profileId));
+    }
   };
 
   return (
@@ -400,7 +420,13 @@ const RoommateListings = ({ onViewDetail }) => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredRoommates.map(profile => (
-                <RoommateCard key={profile._id} profile={profile} onClick={() => onViewDetail(profile.userId)} />
+                <RoommateCard 
+                  key={profile._id} 
+                  profile={profile} 
+                  onClick={() => onViewDetail(profile.userId)}
+                  onFavoriteToggle={handleFavoriteToggle}
+                  isFavorited={savedProfileIds.includes(profile._id)}
+                />
               ))}
             </div>
           )}
