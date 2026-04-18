@@ -10,22 +10,44 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
   const [editingListingId, setEditingListingId] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const [analyticsOverview, setAnalyticsOverview] = useState(null);
+  const [analyticsDetailed, setAnalyticsDetailed] = useState(null);
+
+  const [ownerId, setOwnerId] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [profile, setProfile] = useState(null);
+
   const fetchListings = () => {
     fetch("http://localhost:5001/api/apartments").then(res => res.json()).then(setListings);
   };
 
-  useEffect(() => {
-    setSubTab(initialSubTab);
-  }, [initialSubTab]);
+  const fetchAnalyticsOverview = (ownerId) => {
+    fetch(`http://localhost:5001/api/analytics/overview/${ownerId}`)
+      .then(res => res.json())
+      .then(setAnalyticsOverview)
+      .catch(err => console.error("Failed to fetch analytics overview:", err));
+  };
+
+  const fetchAnalyticsDetailed = (ownerId) => {
+    fetch(`http://localhost:5001/api/analytics/detailed/${ownerId}`)
+      .then(res => res.json())
+      .then(setAnalyticsDetailed)
+      .catch(err => console.error("Failed to fetch detailed analytics:", err));
+  };
 
   useEffect(() => {
     fetchListings();
     fetch("http://localhost:5001/api/tenant-matches").then(res => res.json()).then(setTenantMatches);
   }, []);
 
-  const [ownerId, setOwnerId] = useState("");
-  const [ownerName, setOwnerName] = useState("");
-  const [profile, setProfile] = useState(null);
+  useEffect(() => {
+    console.log("OwnerId useEffect triggered - ownerId:", ownerId);
+    if (ownerId) {
+      console.log("Calling fetchAnalyticsOverview and fetchAnalyticsDetailed");
+      fetchAnalyticsOverview(ownerId);
+      fetchAnalyticsDetailed(ownerId);
+    }
+  }, [ownerId]);
 
   useEffect(() => {
     const loadOwner = async () => {
@@ -56,10 +78,14 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
     setIsSidebarOpen(false);
   };
 
-  const stats = [
-    { label: "Total Views", value: "2,481", change: "+12%", color: "accent-teal", icon: TrendingUp },
-    { label: "Active Inquiries", value: "42", change: "+5%", color: "primary", icon: MessageSquare },
-    { label: "Listing Strength", value: "Great", change: "-2%", color: "primary", icon: Trophy },
+  const stats = analyticsOverview ? [
+    { label: "Total Views", value: analyticsOverview.totalViews.toLocaleString(), change: analyticsOverview.changeViews, color: "accent-teal", icon: TrendingUp },
+    { label: "Active Inquiries", value: analyticsOverview.activeInquiries.toString(), change: analyticsOverview.changeInquiries, color: "primary", icon: MessageSquare },
+    { label: "Listing Strength", value: analyticsOverview.listingStrength, change: analyticsOverview.changeStrength, color: "primary", icon: Trophy },
+  ] : [
+    { label: "Total Views", value: "Loading...", change: "", color: "accent-teal", icon: TrendingUp },
+    { label: "Active Inquiries", value: "Loading...", change: "", color: "primary", icon: MessageSquare },
+    { label: "Listing Strength", value: "Loading...", change: "", color: "primary", icon: Trophy },
   ];
 
   return (
@@ -353,11 +379,40 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
 
           {subTab === "analytics" && (
             <div className="space-y-8">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h3 className="text-2xl font-bold text-white">Performance Analytics</h3>
-                <div className="flex gap-2">
-                  <button className="flex-1 sm:flex-none px-4 py-2 bg-slate-800 rounded-lg text-sm font-bold">Last 30 Days</button>
-                  <button className="flex-1 sm:flex-none px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold">Export Report</button>
+              <div className="flex items-center justify-between gap-4">
+                <h3 className="text-2xl font-bold text-white">Listing Analytics</h3>
+              </div>
+
+              {/* Analytics Summary */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-accent-teal/10 rounded-xl flex items-center justify-center">
+                      <Building2 size={20} className="text-accent-teal" />
+                    </div>
+                  </div>
+                  <p className="text-slate-500 text-sm font-medium">Total Listings</p>
+                  <h3 className="text-2xl font-extrabold mt-1 text-white">{analyticsDetailed?.totalListings || "Loading..."}</h3>
+                </div>
+
+                <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center">
+                      <Building2 size={20} className="text-green-500" />
+                    </div>
+                  </div>
+                  <p className="text-slate-500 text-sm font-medium">Active Listings</p>
+                  <h3 className="text-2xl font-extrabold mt-1 text-white">{analyticsDetailed?.activeListings || "Loading..."}</h3>
+                </div>
+
+                <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-accent-teal/10 rounded-xl flex items-center justify-center">
+                      <TrendingUp size={20} className="text-accent-teal" />
+                    </div>
+                  </div>
+                  <p className="text-slate-500 text-sm font-medium">Total Views</p>
+                  <h3 className="text-2xl font-extrabold mt-1 text-white">{analyticsDetailed?.totalViews?.toLocaleString() || "Loading..."}</h3>
                 </div>
               </div>
               
@@ -365,41 +420,54 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
                 <div className="bg-slate-900/50 p-6 md:p-8 rounded-2xl border border-slate-800">
                   <h4 className="font-bold text-lg mb-6">Views Over Time</h4>
                   <div className="h-64 flex items-end gap-1 md:gap-2">
-                    {[40, 65, 45, 90, 75, 55, 85, 60, 95, 80, 70, 100].map((h, i) => (
-                      <div key={i} className="flex-1 bg-primary/20 rounded-t-lg relative group">
-                        <div className="absolute bottom-0 w-full bg-primary rounded-t-lg transition-all" style={{ height: `${h}%` }}></div>
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 px-2 py-1 rounded text-[10px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                          {h * 10}
-                        </div>
-                      </div>
-                    ))}
+                    {analyticsDetailed?.viewsOverTime && analyticsDetailed.viewsOverTime.length > 0 ? (() => {
+                      const maxViews = Math.max(...analyticsDetailed.viewsOverTime.map(d => d.views), 1);
+                      return analyticsDetailed.viewsOverTime.map((data, i) => {
+                        const heightPercent = data.views > 0 ? (data.views / maxViews) * 100 : 2;
+                        return (
+                          <div key={i} className="flex-1 bg-slate-700 rounded-t-lg relative group min-h-[4px]">
+                            <div 
+                              className={`absolute bottom-0 w-full rounded-t-lg transition-all ${data.views > 0 ? 'bg-blue-500' : 'bg-slate-500'}`} 
+                              style={{ height: `${Math.max(heightPercent, 4)}%` }}
+                            ></div>
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 px-2 py-1 rounded text-[10px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                              {data.views}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })() : (
+                      Array.from({ length: 12 }, (_, i) => (
+                        <div key={i} className="flex-1 bg-slate-600 rounded-t-lg animate-pulse min-h-[4px]"></div>
+                      ))
+                    )}
                   </div>
                   <div className="flex justify-between mt-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                    <span>Jan</span>
-                    <span>Jun</span>
-                    <span>Dec</span>
+                    {analyticsDetailed?.viewsOverTime && analyticsDetailed.viewsOverTime.length > 0 ? analyticsDetailed.viewsOverTime.map((data, i) => (
+                      <span key={i}>{data.month}</span>
+                    )) : <span>Loading...</span>}
                   </div>
                 </div>
 
                 <div className="bg-slate-900/50 p-6 md:p-8 rounded-2xl border border-slate-800">
                   <h4 className="font-bold text-lg mb-6">Lead Sources</h4>
                   <div className="space-y-6">
-                    {[
-                      { label: "Direct Search", value: 45, color: "bg-primary" },
-                      { label: "Social Media", value: 30, color: "bg-accent-teal" },
-                      { label: "University Portals", value: 15, color: "bg-amber-500" },
-                      { label: "Referrals", value: 10, color: "bg-slate-500" }
-                    ].map((source, i) => (
+                    {analyticsDetailed?.leadSources ? analyticsDetailed.leadSources.map((source, i) => (
                       <div key={i} className="space-y-2">
                         <div className="flex justify-between text-sm font-bold">
                           <span>{source.label}</span>
                           <span>{source.value}%</span>
                         </div>
                         <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                          <div className={`h-full ${source.color}`} style={{ width: `${source.value}%` }}></div>
+                          <div className={`h-full ${i === 0 ? 'bg-primary' : i === 1 ? 'bg-accent-teal' : i === 2 ? 'bg-amber-500' : 'bg-slate-500'}`} style={{ width: `${source.value}%` }}></div>
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="space-y-2">
+                        <div className="h-4 bg-slate-700 rounded animate-pulse"></div>
+                        <div className="h-2 bg-slate-800 rounded-full"></div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

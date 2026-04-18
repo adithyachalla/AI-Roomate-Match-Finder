@@ -23,9 +23,9 @@ const ListingSchema = new mongoose.Schema(
 
     // Listing meta
     is_ai_match: Boolean,
-    status: String,         // "Active", "Pending"
-    views: Number,
-    matches: Number,
+    status: { type: String, default: "Active" },         // "Active", "Pending"
+    views: { type: Number, default: 0 },
+    matches: { type: Number, default: 0 },
     owner: {
       name: String,
       avatar: String,

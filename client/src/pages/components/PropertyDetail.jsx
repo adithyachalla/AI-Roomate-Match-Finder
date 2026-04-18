@@ -14,12 +14,22 @@ const PropertyDetail = ({ propertyId, onBack, onMessageOwner, dashboardType = "s
   const [direction, setDirection] = useState(0);
 
   useEffect(() => {
-    fetch(`http://localhost:5001/api/apartments/${propertyId}`)
-      .then(res => res.json())
-      .then(data => {
+    const loadProperty = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`http://localhost:5001/api/apartments/${propertyId}/views`, {
+          method: "POST",
+        });
+        const data = await response.json();
         setProperty(data);
+      } catch (err) {
+        console.error("Failed to load property:", err);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    loadProperty();
   }, [propertyId]);
 
   const images = property?.images || (property?.image_url ? [property.image_url] : []);
