@@ -87,7 +87,13 @@ async function startServer() {
 
   app.use(express.json({ limit: "100mb" }));
   app.use(express.urlencoded({ limit: "100mb", extended: true }));
-  app.use(cors());
+  const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:3000";
+  app.use(
+    cors({
+      origin: clientOrigin,
+      credentials: true
+    })
+  );
 
   // Mount auth routes (password -> OTP)
   app.use("/api/auth", authRoutes);

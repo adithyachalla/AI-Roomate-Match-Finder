@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 import BrowseRoommates from "./pages/BrowseRoommates";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -18,11 +19,46 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<AccountCreation />} />
         <Route path="/otp-verify" element={<OTPVerify />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/student-dashboard" element={<StudentDashboard />} />
-        <Route path="/owner-dashboard" element={<OwnerDashboard />} />
-        <Route path="/browse-roommates" element={<BrowseRoommates />} />
-        <Route path="/roommate/:roommateId" element={<RoommateProfilePage />} />
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <Onboarding />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student-dashboard"
+          element={
+            <ProtectedRoute roles={["student"]}>
+              <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/owner-dashboard"
+          element={
+            <ProtectedRoute roles={["owner"]}>
+              <OwnerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/browse-roommates"
+          element={
+            <ProtectedRoute>
+              <BrowseRoommates />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/roommate/:roommateId"
+          element={
+            <ProtectedRoute>
+              <RoommateProfilePage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { logoutRequest } from "../services/auth";
 import ApartmentListings from "./components/ApartmentListings";
 import Header from "./components/Header";
 import ListerDashboard from "./components/ListerDashboard";
@@ -20,9 +21,9 @@ export default function App() {
   const [selectedOwnerId, setSelectedOwnerId] = useState(null);
   const [selectedOwnerName, setSelectedOwnerName] = useState(null);
 
-  const logout = () => {
-    localStorage.clear();
-    navigate("/login");
+  const logout = async () => {
+    await logoutRequest();
+    navigate("/login", { replace: true });
   };
 
   // Handle redirect from PropertyDetail when messaging owner
@@ -34,6 +35,19 @@ export default function App() {
       setActiveTab("dashboard");
     }
   }, [location.state]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    let stored;
+    try {
+      stored = JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      stored = null;
+    }
+    if (!token || !stored?._id) {
+      navigate("/login", { replace: true });
+    }
+  }, [navigate]);
 
   const handleTabChange = (tab) => {
     if (tab === "dashboard") {

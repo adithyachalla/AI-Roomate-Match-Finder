@@ -1,18 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { persistAccountRole } from "../../services/auth";
 
 export default function Role({ next, setData }) {
   const [role, setRole] = useState("student");
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
-  const handleContinue = () => {
-    // ✅ SAVE ROLE INTO GLOBAL ONBOARDING STATE
+  const handleContinue = async () => {
     setData({ role });
+    setSaving(true);
+    try {
+      const accountRole = role === "owner" ? "owner" : "student";
+      await persistAccountRole(accountRole);
 
-    if (role === "owner") {
-      navigate("/owner-dashboard");
-    } else {
-      next(); // continue onboarding
+      if (role === "owner") {
+        navigate("/owner-dashboard");
+      } else {
+        next();
+      }
+    } catch (e) {
+      alert(e?.message || "Could not save your role. Try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -101,9 +111,10 @@ export default function Role({ next, setData }) {
         <div className="space-y-4">
           <button
             onClick={handleContinue}
-            className="w-full h-16 rounded-2xl bg-primary text-white text-lg font-black shadow-xl shadow-primary/25 hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] transition-all"
+            disabled={saving}
+            className="w-full h-16 rounded-2xl bg-primary text-white text-lg font-black shadow-xl shadow-primary/25 hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-60"
           >
-            Continue
+            {saving ? "Saving…" : "Continue"}
           </button>
 
           <p className="text-center text-[12px] text-slate-500 font-medium">

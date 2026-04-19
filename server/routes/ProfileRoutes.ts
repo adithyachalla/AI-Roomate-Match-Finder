@@ -1,6 +1,8 @@
 import express from "express";
+import mongoose from "mongoose";
 import Profile from "../models/Profile.js";
 import SimilarProfile from "../models/SimilarProfile.js";
+import User from "../models/User.js";
 import { sameUserId } from "../matching/ids.js";
 import { rebuildAllSimilarProfiles } from "../matching/rebuildSimilarProfiles.js";
 
@@ -11,6 +13,9 @@ const router = express.Router();
 // 🔥 THIS MUST COME BEFORE /:userId ROUTE
 router.get("/similar/top/:userId", async (req, res) => {
   try {
+    const roommateUserIds = await User.find({ accountRole: { $ne: "owner" } }).distinct("_id");
+    const studentIdSet = new Set(roommateUserIds.map((id) => String(id)));
+
     const similarProfilesRecord = await SimilarProfile.findOne({
       userId: req.params.userId
     });
@@ -33,6 +38,9 @@ router.get("/similar/top/:userId", async (req, res) => {
         if (sameUserId(similarItem.userId, viewerId)) {
           return null;
         }
+        if (!studentIdSet.has(String(similarItem.userId))) {
+          return null;
+        }
         const profileDoc = profiles.find(p => p.userId.toString() === similarItem.userId.toString());
         return profileDoc ? {
           ...profileDoc.toObject(),
@@ -51,10 +59,11 @@ router.get("/similar/top/:userId", async (req, res) => {
   }
 });
 
-// ✅ GET ALL PROFILES
+// ✅ GET ALL ROOMMATE SEEKER PROFILES (excludes property owners — Browse Roommates only)
 router.get("/", async (req, res) => {
   try {
-    const profiles = await Profile.find().select("-__v");
+    const roommateUserIds = await User.find({ accountRole: { $ne: "owner" } }).distinct("_id");
+    const profiles = await Profile.find({ userId: { $in: roommateUserIds } }).select("-__v");
     res.json(profiles);
   } catch (err) {
     console.error("GET ALL PROFILES ERROR:", err);
@@ -65,6 +74,13 @@ router.get("/", async (req, res) => {
 router.post("/create", async (req, res) => {
   try {
     const { userId, profileData } = req.body;
+
+    const accountUser = await User.findById(userId).select("accountRole");
+    if (accountUser?.accountRole === "owner") {
+      return res.status(403).json({
+        message: "Property owner accounts do not use roommate profiles. Use the owner dashboard instead."
+      });
+    }
 
     const existing = await Profile.findOne({ userId });
 
@@ -117,13 +133,21 @@ router.post("/save/:userId/:profileIdToSave", async (req, res) => {
       return res.status(404).json({ message: "User profile not found" });
     }
 
-    // Check if already saved
-    if (userProfile.savedProfiles.includes(profileIdToSave)) {
+    const targetProfile = await Profile.findById(profileIdToSave);
+    if (!targetProfile) {
+      return res.status(404).json({ message: "Profile to save not found" });
+    }
+    const targetUser = await User.findById(targetProfile.userId).select("accountRole");
+    if (targetUser?.accountRole === "owner") {
+      return res.status(400).json({ message: "Cannot favorite a property owner lister as a roommate." });
+    }
+
+    const saveId = new mongoose.Types.ObjectId(profileIdToSave);
+    if (userProfile.savedProfiles.some((id) => id.toString() === saveId.toString())) {
       return res.status(400).json({ message: "Profile already saved" });
     }
 
-    // Add to savedProfiles
-    userProfile.savedProfiles.push(profileIdToSave);
+    userProfile.savedProfiles.push(saveId);
     await userProfile.save();
 
     res.json({ message: "Profile saved successfully", savedProfiles: userProfile.savedProfiles });
@@ -167,8 +191,12 @@ router.get("/saved/:userId", async (req, res) => {
       return res.status(404).json({ message: "User profile not found" });
     }
 
-    // Get all saved profiles with full details
-    const savedProfiles = await Profile.find({ _id: { $in: userProfile.savedProfiles } });
+    const roommateUserIds = await User.find({ accountRole: { $ne: "owner" } }).distinct("_id");
+
+    const savedProfiles = await Profile.find({
+      _id: { $in: userProfile.savedProfiles },
+      userId: { $in: roommateUserIds }
+    });
 
     res.json(savedProfiles);
   } catch (err) {

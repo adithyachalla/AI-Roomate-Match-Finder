@@ -1,11 +1,12 @@
 // src/pages/Login.jsx
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5001";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // form state
   const [email, setEmail] = useState("");
@@ -38,6 +39,7 @@ export default function Login() {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email: emailTrim, password })
       });
 
@@ -63,7 +65,8 @@ export default function Login() {
       // Verified user — backend returned JWT directly (no OTP needed)
       if (data.token) {
         localStorage.setItem("token", data.token);
-        localStorage.setItem("role", "student");
+        const accountRole = data.user?.accountRole || "student";
+        localStorage.setItem("role", accountRole);
         if (data.user) {
           localStorage.setItem(
             "user",
@@ -71,11 +74,20 @@ export default function Login() {
               _id: data.user._id,
               username: data.user.username,
               fullname: data.user.fullname,
-              email: data.user.email
+              email: data.user.email,
+              accountRole
             })
           );
         }
-        navigate("/student-dashboard");
+        const from = location.state?.from;
+        const safe =
+          typeof from === "string" &&
+          from.startsWith("/") &&
+          !from.startsWith("//") &&
+          from !== "/login" &&
+          from !== "/signup";
+        const defaultHome = accountRole === "owner" ? "/owner-dashboard" : "/student-dashboard";
+        navigate(safe ? from : defaultHome);
         return;
       }
 

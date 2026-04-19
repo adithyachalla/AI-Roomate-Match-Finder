@@ -1,9 +1,11 @@
 // server/routes/auth.ts
 import { Router } from "express";
-import { login, verifyOtp, signup, resendOtp, transporter } from "../controllers/authController.js";
+import { login, verifyOtp, signup, resendOtp, transporter, authMe, logout } from "../controllers/authController.js";
 
 const router = Router();
 
+router.get("/me", authMe);
+router.post("/logout", logout);
 router.post("/login", login);
 router.post("/verify-otp", verifyOtp);
 router.post("/signup", signup);

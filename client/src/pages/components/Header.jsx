@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { persistAccountRole } from "../../services/auth";
 import CompleteProfileModal from "./CompleteProfileModal";
 const Header = ({ activeTab, setActiveTab, onLogout, onEditProfile, showEditProfile = false, showListProperty = true }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,46 +38,66 @@ const Header = ({ activeTab, setActiveTab, onLogout, onEditProfile, showEditProf
     const role = localStorage.getItem("role");
 
     if (role === "student") {
-      localStorage.setItem("role", "owner");
-      navigate("/owner-dashboard", { state: { switchRole: true } });
+      try {
+        setProfileCheckLoading(true);
+        await persistAccountRole("owner");
+        navigate("/owner-dashboard", { state: { switchRole: true } });
+      } catch (err) {
+        console.error("Switch to owner failed:", err);
+        alert(err?.message || "Could not switch to owner. Try again.");
+      } finally {
+        setProfileCheckLoading(false);
+      }
     } else {
       try {
         setProfileCheckLoading(true);
         const stored = JSON.parse(localStorage.getItem("user"));
         if (!stored?._id) {
-          localStorage.setItem("role", "student");
+          await persistAccountRole("student");
           navigate("/student-dashboard", { state: { switchRole: true } });
           return;
         }
         const res = await fetch(`http://localhost:5001/api/profile/${stored._id}`);
         const profile = res.ok ? await res.json() : {};
-        setProfileCheckLoading(false);
 
         if (isProfileComplete(profile)) {
-          localStorage.setItem("role", "student");
+          await persistAccountRole("student");
           navigate("/student-dashboard", { state: { switchRole: true } });
         } else {
           setShowProfileModal(true);
         }
       } catch (err) {
         console.error("Profile check failed:", err);
+        try {
+          await persistAccountRole("student");
+          navigate("/student-dashboard", { state: { switchRole: true } });
+        } catch (e2) {
+          alert(e2?.message || "Could not switch role.");
+        }
+      } finally {
         setProfileCheckLoading(false);
-        localStorage.setItem("role", "student");
-        navigate("/student-dashboard", { state: { switchRole: true } });
       }
     }
   }, [navigate]);
 
-  const handleCompleteProfile = useCallback(() => {
+  const handleCompleteProfile = useCallback(async () => {
     setShowProfileModal(false);
-    localStorage.setItem("role", "student");
-    navigate("/onboarding");
+    try {
+      await persistAccountRole("student");
+      navigate("/onboarding");
+    } catch (err) {
+      alert(err?.message || "Could not switch to student.");
+    }
   }, [navigate]);
 
-  const handleSkipProfile = useCallback(() => {
+  const handleSkipProfile = useCallback(async () => {
     setShowProfileModal(false);
-    localStorage.setItem("role", "student");
-    navigate("/student-dashboard", { state: { switchRole: true } });
+    try {
+      await persistAccountRole("student");
+      navigate("/student-dashboard", { state: { switchRole: true } });
+    } catch (err) {
+      alert(err?.message || "Could not switch to student.");
+    }
   }, [navigate]);
 
   return (

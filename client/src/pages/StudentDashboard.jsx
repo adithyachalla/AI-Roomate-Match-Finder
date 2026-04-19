@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
+import { logoutRequest } from "../services/auth";
 import ApartmentListings from "./components/ApartmentListings";
 import PropertyDetail from "./components/PropertyDetail";
 import { StudentMessagesTab } from "./components/StudentMessagesTab";
@@ -33,12 +34,17 @@ export default function StudentDashboard() {
     }
   }, [location.state]);
 
-  // ✅ FIXED useEffect
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("user"));
+    const token = localStorage.getItem("token");
+    let stored;
+    try {
+      stored = JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      stored = null;
+    }
 
-    if (!stored?._id) {
-      setUser({});
+    if (!token || !stored?._id) {
+      navigate("/login", { replace: true });
       return;
     }
 
@@ -57,7 +63,7 @@ export default function StudentDashboard() {
         setTopProfiles([]);
       })
       .finally(() => setLoadingProfiles(false));
-  }, []);
+  }, [navigate]);
 
   // Fetch saved profiles when tab is selected
   useEffect(() => {
@@ -77,9 +83,9 @@ export default function StudentDashboard() {
     }
   }, [activeTab]);
 
-  const logout = () => {
-    localStorage.clear();
-    navigate("/login");
+  const logout = async () => {
+    await logoutRequest();
+    navigate("/login", { replace: true });
   };
 
   // ✅ SWITCH ROLE FUNCTION
