@@ -31,6 +31,7 @@ const EditListing = ({ listingId, onBack, onSave }) => {
     price: 0,
     bedrooms: 1,
     bathrooms: 1,
+    leaseDuration: "Full Year",
     amenities: [],
     images: [],
     image_url: "",
@@ -51,6 +52,7 @@ const EditListing = ({ listingId, onBack, onSave }) => {
           price: data.price,
           bedrooms: data.bedrooms,
           bathrooms: data.bathrooms,
+          leaseDuration: data.leaseDuration || "Full Year",
           amenities: data.amenities || [],
           images: data.images || (data.image_url ? [data.image_url] : []),
           image_url: data.image_url,
@@ -320,6 +322,18 @@ const EditListing = ({ listingId, onBack, onSave }) => {
                   <option value={1}>1 Bathroom</option>
                   <option value={1.5}>1.5 Bathrooms</option>
                   <option value={2}>2+ Bathrooms</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold text-slate-300">Lease Duration</label>
+                <select 
+                  name="leaseDuration"
+                  value={formData.leaseDuration}
+                  onChange={handleInputChange}
+                  className="w-full bg-slate-800/50 border-slate-700 rounded-xl focus:ring-primary focus:border-primary px-4 py-3 text-white"
+                >
+                  <option>Full Year</option>
+                  <option>Semester</option>
                 </select>
               </div>
             </div>

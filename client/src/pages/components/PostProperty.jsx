@@ -39,6 +39,7 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
     availableFrom: "",
     bedrooms: "1 Bedroom",
     bathrooms: "1 Bathroom",
+    leaseDuration: "Full Year",
     amenities: []
   });
 
@@ -373,6 +374,18 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
                       <option>1 Bathroom</option>
                       <option>1.5 Bathrooms</option>
                       <option>2+ Bathrooms</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-slate-300">Lease Duration</label>
+                    <select 
+                      name="leaseDuration"
+                      value={formData.leaseDuration}
+                      onChange={handleInputChange}
+                      className="w-full bg-slate-800/50 border border-slate-700 rounded-xl focus:ring-primary focus:border-primary px-4 py-3"
+                    >
+                      <option>Full Year</option>
+                      <option>Semester</option>
                     </select>
                   </div>
                 </div>

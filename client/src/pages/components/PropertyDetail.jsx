@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Bath, Bed, ChevronLeft, ChevronRight, Heart, MapPin, MessageSquare, Navigation, Share2, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, Bath, Bed, ChevronLeft, ChevronRight, Heart, MapPin, MessageSquare, Navigation, Share2, ShieldCheck, Sparkles, Users, Calendar } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getApartmentSummary } from "../../services/utility";
@@ -188,7 +188,7 @@ const PropertyDetail = ({ propertyId, onBack, onMessageOwner, dashboardType = "s
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-8 border-y border-slate-800">
+            <div className={`grid gap-6 py-8 border-y border-slate-800 ${property.leaseDuration ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-3'}`}>
               <div className="flex items-center gap-3">
                 <div className="size-12 rounded-2xl bg-slate-800/50 flex items-center justify-center text-primary">
                   <Bed size={24} />
@@ -207,15 +207,17 @@ const PropertyDetail = ({ propertyId, onBack, onMessageOwner, dashboardType = "s
                   <p className="font-bold text-lg">{property.bathrooms}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="size-12 rounded-2xl bg-slate-800/50 flex items-center justify-center text-primary">
-                  <Navigation size={24} />
+              {property.leaseDuration && (
+                <div className="flex items-center gap-3">
+                  <div className="size-12 rounded-2xl bg-slate-800/50 flex items-center justify-center text-primary">
+                    <Calendar size={24} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 font-bold uppercase">Lease Duration</p>
+                    <p className="font-bold text-lg">{property.leaseDuration}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-slate-500 font-bold uppercase">Distance</p>
-                  <p className="font-bold text-lg">{property.distance}</p>
-                </div>
-              </div>
+              )}
               <div className="flex items-center gap-3">
                 <div className="size-12 rounded-2xl bg-slate-800/50 flex items-center justify-center text-primary">
                   <ShieldCheck size={24} />

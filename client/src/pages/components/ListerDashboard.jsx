@@ -163,21 +163,6 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
             <h2 className="text-lg md:text-xl font-bold text-white capitalize">{subTab}</h2>
           </div>
           <div className="flex items-center gap-3 md:gap-6">
-            <div className="relative hidden sm:block">
-              <button className="p-2 text-slate-500 hover:bg-slate-800 rounded-full transition-colors">
-                <RefreshCw size={20} />
-              </button>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-accent-teal rounded-full ring-2 ring-background-dark"></span>
-            </div>
-            <div className="flex items-center gap-2 md:gap-3 border-l border-slate-800 pl-4 md:pl-6">
-              <div className="text-right hidden xs:block">
-                <p className="text-sm font-bold text-white">Alex Johnson</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Premium Lister</p>
-              </div>
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary/20 border-2 border-accent-teal flex items-center justify-center overflow-hidden">
-                <img alt="User" className="w-full h-full object-cover" src="https://picsum.photos/seed/lister/100/100" />
-              </div>
-            </div>
           </div>
         </header>
 
