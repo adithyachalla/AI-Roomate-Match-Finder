@@ -26,8 +26,11 @@ export const getApartmentSummary = async (apartmentDetails) => {
   const details = apartmentDetails.toLowerCase();
   let summary = "This property offers a great balance of location and value. ";
 
-  if (details.includes("gym") || details.includes("pool")) {
+  if (details.includes("gym")) {
     summary += "The premium amenities like the gym make it perfect for staying active between classes. ";
+  }
+  if (details.includes("pool")) {
+    summary += "The resort-style pool area provides a perfect spot for relaxation and socializing. ";
   }
   if (details.includes("campus") || details.includes("mi to")) {
     summary += "Its close proximity to campus is a major time-saver for busy students. ";

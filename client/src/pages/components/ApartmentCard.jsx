@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Sparkles, Heart, Bed, Bath, Navigation, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, Heart, Bed, Bath, Navigation, Users, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getApartmentSummary } from "../../services/utility";
 
@@ -104,6 +104,7 @@ const ApartmentCard = ({ apartment, onClick }) => {
           <span className="flex items-center gap-1"><Bed size={16} className="md:size-[18px]" /> {apartment.bedrooms} BR</span>
           <span className="flex items-center gap-1"><Bath size={16} className="md:size-[18px]" /> {apartment.bathrooms} BA</span>
           <span className="flex items-center gap-1"><Navigation size={16} className="md:size-[18px]" /> {apartment.distance}</span>
+          {apartment.leaseDuration && <span className="flex items-center gap-1"><Calendar size={16} className="md:size-[18px]" /> {apartment.leaseDuration}</span>}
         </div>
         <div className="flex flex-wrap gap-2 mb-4">
           {apartment.amenities.map(amenity => (
