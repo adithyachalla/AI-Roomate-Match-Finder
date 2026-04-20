@@ -1,6 +1,5 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
-import BrowseRoommates from "./pages/BrowseRoommates";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import AccountCreation from "./pages/onboarding/AccountCreation";
@@ -46,8 +45,8 @@ function App() {
         <Route
           path="/browse-roommates"
           element={
-            <ProtectedRoute>
-              <BrowseRoommates />
+            <ProtectedRoute roles={["student"]}>
+              <Navigate to="/student-dashboard" replace state={{ studentTab: "browseRoommates" }} />
             </ProtectedRoute>
           }
         />

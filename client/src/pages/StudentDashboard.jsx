@@ -4,8 +4,20 @@ import { X } from "lucide-react";
 import { logoutRequest } from "../services/auth";
 import ApartmentListings from "./components/ApartmentListings";
 import PropertyDetail from "./components/PropertyDetail";
+import RoommateListings from "./components/RoommateListings";
 import { StudentMessagesTab } from "./components/StudentMessagesTab";
 import Header from "./components/Header";
+
+/** Same bar as Header: budget + sleep + social required before we show AI top matches. */
+function isProfileCompleteForMatches(profile) {
+  if (!profile || typeof profile !== "object" || Object.keys(profile).length === 0) return false;
+  const hasBudget = Number(profile.livingPreferences?.budget) > 0;
+  const sleep = profile.lifestyle?.sleep;
+  const social = profile.lifestyle?.social;
+  const hasSleep = sleep !== "" && sleep != null;
+  const hasSocial = social !== "" && social != null;
+  return hasBudget && hasSleep && hasSocial;
+}
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -18,6 +30,14 @@ export default function StudentDashboard() {
   const [selectedOwner, setSelectedOwner] = useState(null);
   const [savedProfiles, setSavedProfiles] = useState([]);
   const [loadingSavedProfiles, setLoadingSavedProfiles] = useState(false);
+
+  // Deep link: /browse-roommates → dashboard with this tab (see App.js Navigate)
+  useEffect(() => {
+    if (location.state?.studentTab) {
+      setActiveTab(location.state.studentTab);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state?.studentTab, location.pathname, navigate]);
 
   // Check if coming from roommate detail or property detail with state
   useEffect(() => {
@@ -50,19 +70,33 @@ export default function StudentDashboard() {
 
     fetch(`http://localhost:5001/api/profile/${stored._id}`)
       .then(res => (res.ok ? res.json() : {}))
-      .then(data => setUser(data || {}))
-      .catch(() => setUser({}));
+      .then(async (data) => {
+        const profile = data || {};
+        setUser(profile);
 
-    // Fetch top 10 similar profiles
-    setLoadingProfiles(true);
-    fetch(`http://localhost:5001/api/profile/similar/top/${stored._id}`)
-      .then(res => (res.ok ? res.json() : []))
-      .then(data => setTopProfiles(Array.isArray(data) ? data : []))
-      .catch(err => {
-        console.error("Error fetching similar profiles:", err);
-        setTopProfiles([]);
+        if (!isProfileCompleteForMatches(profile)) {
+          setTopProfiles([]);
+          setLoadingProfiles(false);
+          return;
+        }
+
+        setLoadingProfiles(true);
+        try {
+          const res = await fetch(`http://localhost:5001/api/profile/similar/top/${stored._id}`);
+          const list = res.ok ? await res.json() : [];
+          setTopProfiles(Array.isArray(list) ? list : []);
+        } catch (err) {
+          console.error("Error fetching similar profiles:", err);
+          setTopProfiles([]);
+        } finally {
+          setLoadingProfiles(false);
+        }
       })
-      .finally(() => setLoadingProfiles(false));
+      .catch(() => {
+        setUser({});
+        setTopProfiles([]);
+        setLoadingProfiles(false);
+      });
   }, [navigate]);
 
   // Fetch saved profiles when tab is selected
@@ -195,7 +229,7 @@ export default function StudentDashboard() {
     return <div className="text-white p-10">Loading...</div>;
   }
 
-  const isEmptyProfile = !user || Object.keys(user).length === 0;
+  const profileDetailsComplete = isProfileCompleteForMatches(user);
 
   return (
     <div className="flex flex-col h-screen bg-background-dark text-white">
@@ -224,8 +258,8 @@ export default function StudentDashboard() {
             </button>
 
             <button 
-              onClick={() => navigate("/browse-roommates")}
-              className="w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition"
+              onClick={() => setActiveTab("browseRoommates")}
+              className={`w-full text-left px-3 py-2 rounded-lg transition ${activeTab === "browseRoommates" ? "bg-primary/10 text-primary font-bold" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
             >
               Browse Roommates
             </button>
@@ -275,16 +309,29 @@ export default function StudentDashboard() {
         </aside>
 
         {/* MAIN */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {activeTab === "browseRoommates" ? (
+          <div className="flex flex-col flex-1 min-h-0 overflow-hidden px-6 pb-6 pt-4">
+            <h1 className="text-2xl font-bold text-white mb-4 shrink-0">Browse Roommates</h1>
+            <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-white/10 bg-background-dark">
+              <RoommateListings
+                onViewDetail={(roommateId) =>
+                  navigate(`/roommate/${roommateId}`, {
+                    state: {
+                      roommateId,
+                      roommateName: "",
+                      returnToStudentTab: "browseRoommates"
+                    }
+                  })
+                }
+              />
+            </div>
+          </div>
+        ) : (
+        <div className="flex-1 overflow-y-auto p-8 min-h-0">
 
         {activeTab === "dashboard" && (
           <>
-        {isEmptyProfile && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded mb-6">
-            Your profile is incomplete. Complete it to get better matches.
-          </div>
-        )}
-
         {/* PROFILE CARD */}
 <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-2xl mb-6 border border-white/10 shadow-xl">
 
@@ -360,25 +407,51 @@ export default function StudentDashboard() {
   </div>
 </div>
 
-        {/* MATCHES */}
+        {/* MATCHES — only when profile has enough detail for scoring */}
         <h1 className="text-2xl font-bold mb-4">
           Highly Compatible
         </h1>
 
-        {loadingProfiles && (
+        {!profileDetailsComplete && (
+          <div className="bg-gradient-to-br from-slate-800/90 to-slate-900 border border-primary/25 rounded-2xl p-8 shadow-xl max-w-2xl">
+            <h2 className="text-xl font-bold text-white mb-2">Finish your profile for Top Matches</h2>
+            <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+              Add your budget, sleep schedule, and social style so we can rank compatible roommates for you.
+              Until then, Top Matches stays empty — you can still explore everyone in Browse Roommates.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/onboarding")}
+                className="flex-1 py-3 px-4 rounded-xl bg-primary text-white font-bold hover:opacity-90 transition"
+              >
+                Complete your profile
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("browseRoommates")}
+                className="flex-1 py-3 px-4 rounded-xl bg-white/10 border border-white/15 text-white font-bold hover:bg-white/15 transition"
+              >
+                Browse roommates
+              </button>
+            </div>
+          </div>
+        )}
+
+        {profileDetailsComplete && loadingProfiles && (
           <div className="text-slate-400 text-center py-8">
             Loading top matches...
           </div>
         )}
 
-        {!loadingProfiles && topProfiles.length === 0 && (
+        {profileDetailsComplete && !loadingProfiles && topProfiles.length === 0 && (
           <div className="bg-slate-800/50 border border-white/10 p-6 rounded-lg text-center">
             <p className="text-slate-400 mb-2">No similar profiles found yet</p>
-            <p className="text-xs text-slate-500">Complete your profile to get better matches!</p>
+            <p className="text-xs text-slate-500">Check back later or browse all roommates in the sidebar.</p>
           </div>
         )}
 
-        {!loadingProfiles && topProfiles.length > 0 && (
+        {profileDetailsComplete && !loadingProfiles && topProfiles.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {topProfiles.map((profile, index) => (
               <div
@@ -542,6 +615,8 @@ export default function StudentDashboard() {
           />
         )}
 
+        </div>
+        )}
       </main>
       </div>
     </div>
