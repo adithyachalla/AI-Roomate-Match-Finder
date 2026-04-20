@@ -1,11 +1,10 @@
-import { BarChart3, Building2, LayoutDashboard, Menu, MessageSquare, Plus as PlusIcon, RefreshCw, Settings, Sparkles, TrendingUp, Trophy, Users, X } from "lucide-react";
+import { BarChart3, Building2, LayoutDashboard, Menu, MessageSquare, Plus as PlusIcon, RefreshCw, Settings, TrendingUp, Trophy, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import EditListing from "./EditListing";
 import { ListerMessagesTab } from "./ListerMessagesTab";
 
 const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetail, selectedOwnerId, selectedOwnerName }) => {
   const [listings, setListings] = useState([]);
-  const [tenantMatches, setTenantMatches] = useState([]);
   const [subTab, setSubTab] = useState(initialSubTab);
   const [editingListingId, setEditingListingId] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -37,7 +36,6 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
 
   useEffect(() => {
     fetchListings();
-    fetch("http://localhost:5001/api/tenant-matches").then(res => res.json()).then(setTenantMatches);
   }, []);
 
   useEffect(() => {
@@ -122,12 +120,6 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
             className={`flex w-full items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${subTab === "listings" ? "bg-accent-teal/10 text-accent-teal border-r-4 border-accent-teal" : "text-slate-500 hover:bg-slate-800"}`}
           >
             <Building2 size={20} /> <span>My Listings</span>
-          </button>
-          <button 
-            onClick={() => handleSubTabChange("matches")}
-            className={`flex w-full items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${subTab === "matches" ? "bg-accent-teal/10 text-accent-teal border-r-4 border-accent-teal" : "text-slate-500 hover:bg-slate-800"}`}
-          >
-            <Users size={20} /> <span>Tenant Matches</span>
           </button>
           <button 
             onClick={() => handleSubTabChange("messages")}
@@ -222,7 +214,6 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
                       <tr>
                         <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Property</th>
                         <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Status</th>
-                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Matches</th>
                         <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500 text-right">Action</th>
                       </tr>
                     </thead>
@@ -244,16 +235,6 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
                             <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded ${listing.status === 'Active' ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
                               {listing.status || 'Active'}
                             </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex -space-x-2">
-                              {[1, 2].map(n => (
-                                <div key={n} className="w-6 h-6 rounded-full border-2 border-slate-900 bg-slate-300 overflow-hidden">
-                                  <img src={`https://images.unsplash.com/photo-${n === 1 ? '1500648767791-00dcc994a43e' : '1438761681033-6461ffad8d80'}?auto=format&fit=crop&w=50&q=80`} alt="User" />
-                                </div>
-                              ))}
-                              <div className="w-6 h-6 rounded-full border-2 border-slate-900 bg-accent-teal flex items-center justify-center text-[8px] font-bold text-navy-dark">+{listing.matches || 0}</div>
-                            </div>
                           </td>
                           <td className="px-6 py-4 text-right">
                             <button
@@ -331,42 +312,6 @@ const ListerDashboard = ({ setActiveTab, initialSubTab = "overview", onViewDetai
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {subTab === "matches" && (
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold text-white">Tenant Matches</h3>
-              <div className="grid gap-4">
-                {tenantMatches.map(match => (
-                  <div key={match.id} className="bg-slate-900/50 border border-slate-800 p-4 md:p-6 rounded-2xl flex flex-col sm:flex-row items-center gap-4 md:gap-6">
-                    <div className="w-16 h-16 rounded-full border-2 border-accent-teal p-1 shrink-0">
-                      <img src={match.avatar} alt={match.name} className="w-full h-full rounded-full object-cover" />
-                    </div>
-                    <div className="flex-1 text-center sm:text-left">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
-                        <h4 className="font-bold text-lg text-white">{match.name}</h4>
-                        <span className="px-2 py-0.5 bg-accent-teal/10 text-accent-teal text-[10px] font-bold rounded uppercase w-fit mx-auto sm:mx-0">
-                          {match.status}
-                        </span>
-                      </div>
-                      <p className="text-sm text-slate-500">Interested in <span className="text-white font-medium">{match.property}</span></p>
-                    </div>
-                    <div className="text-center sm:text-right">
-                      <div className="flex items-center justify-center sm:justify-end gap-1 text-accent-teal font-bold text-xl mb-1">
-                        <Sparkles size={18} /> {match.score}%
-                      </div>
-                      <button className="text-xs font-bold text-primary hover:underline">View Profile</button>
-                    </div>
-                    <button 
-                      onClick={() => handleSubTabChange("messages")}
-                      className="w-full sm:w-auto bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors"
-                    >
-                      Message
-                    </button>
                   </div>
                 ))}
               </div>

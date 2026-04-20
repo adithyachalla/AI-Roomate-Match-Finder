@@ -461,10 +461,10 @@ const PostProperty = ({ setActiveTab, navigateToDashboard }) => {
               <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Live</span>
             </div>
             <div className="p-2 space-y-1">
-              {listings.slice(0, 3).map(listing => (
+              {listings.filter(listing => String(listing.ownerId) === String(ownerId)).slice(0, 3).map(listing => (
                 <div key={listing.id} onClick={() => navigateToDashboard("listings")} className="p-3 hover:bg-slate-800 rounded-xl flex items-center gap-3 transition-all cursor-pointer">
                   <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                    <img className="w-full h-full object-cover" src={listing.image_url} alt={listing.title} referrerPolicy="no-referrer" />
+                    <img className="w-full h-full object-cover" src={listing.images?.[0] || "/default-property.png"} alt={listing.title} referrerPolicy="no-referrer" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold truncate">{listing.title}</p>
