@@ -1,11 +1,16 @@
 import { Document, model, Schema } from "mongoose";
 
+export type AccountRole = "student" | "owner";
+
 export interface IUser extends Document {
   email: string;
   passwordHash: string;
 
   username: string;
   fullname: string;
+
+  /** Persisted signup / onboarding choice — drives roommate vs lister flows. */
+  accountRole: AccountRole;
 
   isVerified: boolean;
 
@@ -41,6 +46,12 @@ const UserSchema = new Schema<IUser>(
     fullname: {
       type: String,
       required: true
+    },
+
+    accountRole: {
+      type: String,
+      enum: ["student", "owner"],
+      default: "student"
     },
 
     isVerified: { type: Boolean, default: false },

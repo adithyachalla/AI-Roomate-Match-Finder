@@ -1,5 +1,6 @@
 import Profile from "../models/Profile.js";
 import SimilarProfile from "../models/SimilarProfile.js";
+import User from "../models/User.js";
 import { sameUserId } from "./ids.js";
 import { mapProfileToMatchFeatures } from "./normalize.js";
 import { scorePairWeightedV1 } from "./weightedV1.js";
@@ -7,23 +8,21 @@ import { scorePairWeightedV1 } from "./weightedV1.js";
 const TOP_K = 10;
 
 /**
- * Recomputes top-K similar users for every profile using weighted-v1 scoring.
- * The viewer is never included in their own similarProfiles list.
- *
- * **New user (signup then onboarding):**
- * 1. Signup creates a stub Profile (empty lifestyle / zero budget). `rebuildAllSimilarProfiles`
- *    runs: the new user gets top-K others scored with mostly neutral/missing features; existing
- *    users get recomputed lists that may include the new user.
- * 2. Onboarding `POST /api/profile/create` saves real preferences and triggers another rebuild,
- *    so scores reflect the completed profile.
+ * Recomputes top-K similar users for every **student** roommate profile.
+ * Property owners (`accountRole: "owner"`) are excluded from matching and
+ * do not receive SimilarProfile documents.
  */
 export async function rebuildAllSimilarProfiles(): Promise<void> {
-  const profiles = await Profile.find().lean();
+  const roommateUserIds = await User.find({ accountRole: { $ne: "owner" } }).distinct("_id");
+  const idSet = new Set(roommateUserIds.map((id) => String(id)));
 
-  for (const p of profiles) {
+  const profiles = await Profile.find().lean();
+  const roommateProfiles = profiles.filter((p) => idSet.has(String(p.userId)));
+
+  for (const p of roommateProfiles) {
     const featuresA = mapProfileToMatchFeatures(p);
 
-    const similarProfiles = profiles
+    const similarProfiles = roommateProfiles
       .filter((o) => !sameUserId(o.userId, p.userId))
       .map((o) => {
         const { compatibilityScore } = scorePairWeightedV1(featuresA, mapProfileToMatchFeatures(o));
@@ -42,4 +41,8 @@ export async function rebuildAllSimilarProfiles(): Promise<void> {
       { upsert: true }
     );
   }
+
+  await SimilarProfile.deleteMany({
+    userId: { $nin: roommateProfiles.map((p) => p.userId) }
+  });
 }

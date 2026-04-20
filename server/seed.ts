@@ -107,18 +107,21 @@ const seed = async () => {
         email: "alex.johnson@example.com",
         fullname: "Alex Johnson",
         passwordHash: "hashed_password",
+        accountRole: "owner" as const,
       },
       {
         username: "sarah_miller",
         email: "sarah.miller@example.com",
         fullname: "Sarah Miller",
         passwordHash: "hashed_password",
+        accountRole: "owner" as const,
       },
       {
         username: "david_kim",
         email: "david.kim@example.com",
         fullname: "David Kim",
         passwordHash: "hashed_password",
+        accountRole: "owner" as const,
       },
     ];
 
@@ -134,6 +137,11 @@ const seed = async () => {
       const insertedUsers = await User.insertMany(newListingOwners);
       createdListingOwnerUsers = [...existingListingOwners, ...insertedUsers];
     }
+
+    await User.updateMany(
+      { email: { $in: listingOwnerEmails } },
+      { $set: { accountRole: "owner" } }
+    );
     
     // Create profiles for listing owners if they don't exist
     const existingListingOwnerProfiles = await Profile.find({ userId: { $in: createdListingOwnerUsers.map(u => u._id) } });
@@ -280,8 +288,10 @@ const seed = async () => {
     // Delete similar profiles for old test users
     await SimilarProfile.deleteMany({ userId: { $in: oldTestUserIds } });
 
-    // Create sample users
-    const createdUsers = await User.insertMany(sampleProfiles);
+    const sampleUsersWithRole = sampleProfiles.map((p) => ({ ...p, accountRole: "student" as const }));
+
+    // Create sample users (roommate seekers only)
+    const createdUsers = await User.insertMany(sampleUsersWithRole);
     console.log(`Seeded ${createdUsers.length} users successfully`);
 
     // Create corresponding profiles

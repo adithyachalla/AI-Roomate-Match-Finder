@@ -46,6 +46,7 @@ export default function OTPVerify() {
         headers: {
           "Content-Type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({
           email: email.toLowerCase().trim(),
           otp: otp.trim()
@@ -67,6 +68,8 @@ export default function OTPVerify() {
       }
 
       // ✅ SAVE USER DATA (CRITICAL FIX)
+      const accountRole = data.user?.accountRole || "student";
+
       if (data.user) {
         localStorage.setItem(
           "user",
@@ -74,9 +77,11 @@ export default function OTPVerify() {
             _id: data.user._id,
             username: data.user.username,
             fullname: data.user.fullname,
-            email: data.user.email
+            email: data.user.email,
+            accountRole
           })
         );
+        localStorage.setItem("role", accountRole);
       } else {
         console.error("User data missing from backend response");
       }
@@ -85,16 +90,11 @@ export default function OTPVerify() {
       localStorage.removeItem("pendingEmail");
 
       const isNewUser = localStorage.getItem("isNewUser");
-      const role = localStorage.getItem("role");
 
       if (isNewUser === "true") {
         navigate("/onboarding");
       } else {
-        if (role === "owner") {
-          navigate("/owner-dashboard");
-        } else {
-          navigate("/student-dashboard");
-        }
+        navigate(accountRole === "owner" ? "/owner-dashboard" : "/student-dashboard");
       }
 
     } catch (err) {

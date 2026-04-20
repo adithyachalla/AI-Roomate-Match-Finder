@@ -5,12 +5,82 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import Otp from "../models/Otp.js";
-import Profile from "../models/Profile.js";
 import User from "../models/User.js";
-import { rebuildAllSimilarProfiles } from "../matching/rebuildSimilarProfiles.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "change_this_secret";
+const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME || "rs_session";
+const JWT_EXPIRES = "6h";
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS || "10", 10);
+
+function authCookieMaxAgeMs() {
+  return 6 * 60 * 60 * 1000;
+}
+
+/** httpOnly session cookie (same JWT as JSON body; cleared on logout). */
+export function attachAuthCookie(res: Response, token: string) {
+  res.cookie(AUTH_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: authCookieMaxAgeMs()
+  });
+}
+
+function readCookie(req: Request, name: string): string | undefined {
+  const raw = req.headers.cookie;
+  if (!raw) return undefined;
+  const parts = raw.split(";").map((c) => c.trim());
+  for (const p of parts) {
+    if (p.startsWith(`${name}=`)) {
+      return decodeURIComponent(p.slice(name.length + 1));
+    }
+  }
+  return undefined;
+}
+
+function getBearerToken(req: Request): string | undefined {
+  const h = req.headers.authorization;
+  if (h && h.startsWith("Bearer ")) return h.slice(7).trim();
+  return undefined;
+}
+
+export function getTokenFromRequest(req: Request): string | undefined {
+  return readCookie(req, AUTH_COOKIE_NAME) || getBearerToken(req);
+}
+
+/**
+ * GET /api/auth/me — validate JWT from cookie or Authorization header.
+ */
+export async function authMe(req: Request, res: Response) {
+  const token = getTokenFromRequest(req);
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as { sub: string; email: string };
+    const user = await User.findById(payload.sub).select("email accountRole");
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+    return res.json({
+      userId: payload.sub,
+      email: user.email,
+      accountRole: user.accountRole || "student"
+    });
+  } catch {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+}
+
+/**
+ * POST /api/auth/logout — clear httpOnly session cookie.
+ */
+export function logout(_req: Request, res: Response) {
+  res.clearCookie(AUTH_COOKIE_NAME, {
+    path: "/",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax"
+  });
+  return res.json({ ok: true });
+}
 const OTP_TTL_MINUTES = parseInt(process.env.OTP_TTL_MINUTES || "10", 10);
 const OTP_MAX_ATTEMPTS = parseInt(process.env.OTP_MAX_ATTEMPTS || "3", 10);
 
@@ -74,7 +144,8 @@ export async function login(req: Request, res: Response) {
 
     // If user has already verified their email, skip OTP and return JWT directly
     if (user.isVerified) {
-      const token = jwt.sign({ sub: user._id.toString(), email: user.email }, JWT_SECRET, { expiresIn: "6h" });
+      const token = jwt.sign({ sub: user._id.toString(), email: user.email }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+      attachAuthCookie(res, token);
       return res.json({
         message: "Login successful",
         token,
@@ -82,7 +153,8 @@ export async function login(req: Request, res: Response) {
           _id: user._id,
           username: user.username,
           fullname: user.fullname,
-          email: user.email
+          email: user.email,
+          accountRole: user.accountRole || "student"
         }
       });
     }
@@ -172,17 +244,22 @@ export async function verifyOtp(req: Request, res: Response) {
     await Otp.deleteMany({ userId: user._id });
     await User.findByIdAndUpdate(user._id, { isVerified: true });
 
-    const token = jwt.sign({ sub: user._id.toString(), email: user.email }, JWT_SECRET, { expiresIn: "6h" });
+    const verifiedUser = await User.findById(user._id);
+    if (!verifiedUser) return res.status(500).json({ message: "User missing after verify" });
+
+    const token = jwt.sign({ sub: verifiedUser._id.toString(), email: verifiedUser.email }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+    attachAuthCookie(res, token);
     return res.json({
-  message: "Login successful",
-  token,
-  user: {
-    _id: user._id,
-    username: user.username,
-    fullname: user.fullname,
-    email: user.email
-  }
-});
+      message: "Login successful",
+      token,
+      user: {
+        _id: verifiedUser._id,
+        username: verifiedUser.username,
+        fullname: verifiedUser.fullname,
+        email: verifiedUser.email,
+        accountRole: verifiedUser.accountRole || "student"
+      }
+    });
   } catch (err) {
     console.error("verifyOtp error", err);
     return res.status(500).json({ message: "Server error" });
@@ -222,38 +299,8 @@ export async function signup(req: Request, res: Response) {
       passwordHash
     });
 
-    // Auto-create profile for new user
-    try {
-      await Profile.create({
-        userId: newUser._id,
-        username: username || "",
-        fullname: fullname || "",
-        bio: "",
-        profilePic: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
-        lifestyle: {
-          sleep: "",
-          social: "",
-          cleanliness: 0
-        },
-        livingPreferences: {
-          budget: 0,
-          neighborhoods: [],
-          moveIn: "",
-          entireUnit: true
-        }
-      });
-
-      try {
-        await rebuildAllSimilarProfiles();
-      } catch (e) {
-        console.error("rebuildAllSimilarProfiles after signup profile:", e);
-      }
-
-      console.log(`Auto-created profile and rebuilt matches for ${username}`);
-    } catch (profileErr) {
-      console.error("Failed to auto-create profile for new user:", profileErr);
-      // Continue with signup even if profile creation fails
-    }
+    // Roommate Profile documents are created only when a student finishes onboarding
+    // (`POST /api/profile/create`). Owners never get a Browse Roommates profile from signup.
 
     // Generate OTP and store hashed OTP in Otp collection
     const otp = generateOtp();
@@ -378,7 +425,8 @@ export async function seedDummyUsers() {
           username: u.username,
           fullname: u.fullname,
           passwordHash: hash,
-          isVerified: true
+          isVerified: true,
+          accountRole: "student"
         });
         console.log(`Seeded user ${u.email} / ${u.password}`);
       } else {
@@ -398,5 +446,7 @@ export default {
   verifyOtp,
   signup,
   resendOtp,
-  seedDummyUsers
+  seedDummyUsers,
+  authMe,
+  logout
 };
